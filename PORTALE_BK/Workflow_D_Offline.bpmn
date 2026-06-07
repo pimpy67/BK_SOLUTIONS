@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_4" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js" exporterVersion="14.0.0">
+  <bpmn:collaboration id="Collaboration_4">
+    <bpmn:participant id="Participant_Dispositivo_D" name="Dispositivo Client (senza rete)" processRef="Process_Dispositivo_D"/>
+    <bpmn:participant id="Participant_Portale_D" name="Portale (quando rete torna)" processRef="Process_Portale_D"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_Dispositivo_D" isExecutable="false">
+    <bpmn:startEvent id="Event_Dispositivo_D_Start" name="Rete persa">
+      <bpmn:outgoing>Flow_Dispositivo_D_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_Carica_Cache" name="Libreria carica entitlement firmato da cache locale">
+      <bpmn:incoming>Flow_Dispositivo_D_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_D_1" name="data_scadenza_offline passata?">
+      <bpmn:incoming>Flow_Dispositivo_D_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Dispositivo_D_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Activity_Offline_Valida" name="Valida firma offline&#10;(chiave pubblica embedded)">
+      <bpmn:incoming>Flow_Dispositivo_D_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Offline_Sblocca" name="Sblocca funzioni (status: valido)">
+      <bpmn:incoming>Flow_Dispositivo_D_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Offline_Blocca" name="Blocca accesso (scadenza offline superata)">
+      <bpmn:incoming>Flow_Dispositivo_D_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="Gateway_D_2" name="Rete ritorna?">
+      <bpmn:incoming>Flow_Dispositivo_D_6</bpmn:incoming>
+      <bpmn:incoming>Flow_Dispositivo_D_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Dispositivo_D_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="Activity_Refresh" name="POST /client/license/refresh">
+      <bpmn:incoming>Flow_Dispositivo_D_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Attesa_Rete" name="Attesa connessione...">
+      <bpmn:incoming>Flow_Dispositivo_D_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Salva_Nuovo" name="Salva nuovo entitlement + nuova data_scadenza_offline">
+      <bpmn:incoming>Flow_Dispositivo_D_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_Dispositivo_D_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_Dispositivo_D_End" name="Offline terminato">
+      <bpmn:incoming>Flow_Dispositivo_D_12</bpmn:incoming>
+      <bpmn:incoming>Flow_Dispositivo_D_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_1" sourceRef="Event_Dispositivo_D_Start" targetRef="Activity_Carica_Cache"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_2" sourceRef="Activity_Carica_Cache" targetRef="Gateway_D_1"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_3" sourceRef="Gateway_D_1" targetRef="Activity_Offline_Valida" name="No (ancora valido)"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_4" sourceRef="Gateway_D_1" targetRef="Activity_Offline_Blocca" name="Sì (scaduto)"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_5" sourceRef="Activity_Offline_Valida" targetRef="Activity_Offline_Sblocca"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_6" sourceRef="Activity_Offline_Sblocca" targetRef="Gateway_D_2"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_7" sourceRef="Activity_Offline_Blocca" targetRef="Gateway_D_2"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_8" sourceRef="Gateway_D_2" targetRef="Activity_Refresh" name="Sì"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_9" sourceRef="Gateway_D_2" targetRef="Activity_Attesa_Rete" name="No"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_10" sourceRef="Activity_Refresh" targetRef="Activity_Salva_Nuovo"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_11" sourceRef="Activity_Attesa_Rete" targetRef="Event_Dispositivo_D_End"/>
+    <bpmn:sequenceFlow id="Flow_Dispositivo_D_12" sourceRef="Activity_Salva_Nuovo" targetRef="Event_Dispositivo_D_End"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_Portale_D" isExecutable="true">
+    <bpmn:startEvent id="Event_Portale_D_Start" name="Riceve POST /refresh">
+      <bpmn:outgoing>Flow_Portale_D_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_Port_Valida_D" name="Valida registration_token e stato licenza">
+      <bpmn:incoming>Flow_Portale_D_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Portale_D_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Firma_D" name="Firma nuovo documento offline&#10;(data_scadenza_offline = oggi + 7gg)">
+      <bpmn:incoming>Flow_Portale_D_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Portale_D_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Restituisce" name="Restituisce entitlement + data_scadenza_offline">
+      <bpmn:incoming>Flow_Portale_D_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Portale_D_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_Portale_D_End" name="Refresh completato">
+      <bpmn:incoming>Flow_Portale_D_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Portale_D_1" sourceRef="Event_Portale_D_Start" targetRef="Activity_Port_Valida_D"/>
+    <bpmn:sequenceFlow id="Flow_Portale_D_2" sourceRef="Activity_Port_Valida_D" targetRef="Activity_Port_Firma_D"/>
+    <bpmn:sequenceFlow id="Flow_Portale_D_3" sourceRef="Activity_Port_Firma_D" targetRef="Activity_Port_Restituisce"/>
+    <bpmn:sequenceFlow id="Flow_Portale_D_4" sourceRef="Activity_Port_Restituisce" targetRef="Event_Portale_D_End"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_4">
+    <bpmndi:BPMNPlane id="BPMNPlane_4" bpmnElement="Collaboration_4">
+      <bpmndi:BPMNShape id="Participant_Dispositivo_D_di" bpmnElement="Participant_Dispositivo_D" isHorizontal="true">
+        <dc:Bounds x="90" y="40" width="900" height="600"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Dispositivo_D_Start_di" bpmnElement="Event_Dispositivo_D_Start">
+        <dc:Bounds x="150" y="200" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Carica_Cache_di" bpmnElement="Activity_Carica_Cache">
+        <dc:Bounds x="240" y="178" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_D_1_di" bpmnElement="Gateway_D_1" isMarkerVisible="true">
+        <dc:Bounds x="405" y="193" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Offline_Valida_di" bpmnElement="Activity_Offline_Valida">
+        <dc:Bounds x="520" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Offline_Sblocca_di" bpmnElement="Activity_Offline_Sblocca">
+        <dc:Bounds x="680" y="100" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Offline_Blocca_di" bpmnElement="Activity_Offline_Blocca">
+        <dc:Bounds x="520" y="280" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_D_2_di" bpmnElement="Gateway_D_2" isMarkerVisible="true">
+        <dc:Bounds x="405" y="410" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Refresh_di" bpmnElement="Activity_Refresh">
+        <dc:Bounds x="520" y="388" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Attesa_Rete_di" bpmnElement="Activity_Attesa_Rete">
+        <dc:Bounds x="230" y="388" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Salva_Nuovo_di" bpmnElement="Activity_Salva_Nuovo">
+        <dc:Bounds x="680" y="388" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Dispositivo_D_End_di" bpmnElement="Event_Dispositivo_D_End">
+        <dc:Bounds x="840" y="410" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_1_di" bpmnElement="Flow_Dispositivo_D_1">
+        <di:waypoint x="186" y="218"/>
+        <di:waypoint x="240" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_2_di" bpmnElement="Flow_Dispositivo_D_2">
+        <di:waypoint x="340" y="218"/>
+        <di:waypoint x="405" y="218"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_3_di" bpmnElement="Flow_Dispositivo_D_3">
+        <di:waypoint x="430" y="193"/>
+        <di:waypoint x="570" y="180"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="420" y="175" width="70" height="27"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_4_di" bpmnElement="Flow_Dispositivo_D_4">
+        <di:waypoint x="430" y="243"/>
+        <di:waypoint x="570" y="280"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="435" y="260" width="40" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_5_di" bpmnElement="Flow_Dispositivo_D_5">
+        <di:waypoint x="620" y="140"/>
+        <di:waypoint x="680" y="140"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_6_di" bpmnElement="Flow_Dispositivo_D_6">
+        <di:waypoint x="730" y="180"/>
+        <di:waypoint x="730" y="350"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_7_di" bpmnElement="Flow_Dispositivo_D_7">
+        <di:waypoint x="570" y="360"/>
+        <di:waypoint x="430" y="430"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_8_di" bpmnElement="Flow_Dispositivo_D_8">
+        <di:waypoint x="455" y="435"/>
+        <di:waypoint x="520" y="428"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="460" y="417" width="20" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_9_di" bpmnElement="Flow_Dispositivo_D_9">
+        <di:waypoint x="405" y="435"/>
+        <di:waypoint x="330" y="428"/>
+        <bpmndi:BPMNLabel><dc:Bounds x="360" y="417" width="20" height="14"/></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_10_di" bpmnElement="Flow_Dispositivo_D_10">
+        <di:waypoint x="620" y="428"/>
+        <di:waypoint x="680" y="428"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_11_di" bpmnElement="Flow_Dispositivo_D_11">
+        <di:waypoint x="280" y="388"/>
+        <di:waypoint x="858" y="428"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Dispositivo_D_12_di" bpmnElement="Flow_Dispositivo_D_12">
+        <di:waypoint x="780" y="428"/>
+        <di:waypoint x="840" y="428"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="Participant_Portale_D_di" bpmnElement="Participant_Portale_D" isHorizontal="true">
+        <dc:Bounds x="90" y="700" width="900" height="180"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Portale_D_Start_di" bpmnElement="Event_Portale_D_Start">
+        <dc:Bounds x="150" y="780" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Valida_D_di" bpmnElement="Activity_Port_Valida_D">
+        <dc:Bounds x="240" y="758" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Firma_D_di" bpmnElement="Activity_Port_Firma_D">
+        <dc:Bounds x="400" y="758" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Restituisce_di" bpmnElement="Activity_Port_Restituisce">
+        <dc:Bounds x="560" y="758" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Portale_D_End_di" bpmnElement="Event_Portale_D_End">
+        <dc:Bounds x="720" y="780" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Portale_D_1_di" bpmnElement="Flow_Portale_D_1">
+        <di:waypoint x="186" y="798"/>
+        <di:waypoint x="240" y="798"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Portale_D_2_di" bpmnElement="Flow_Portale_D_2">
+        <di:waypoint x="340" y="798"/>
+        <di:waypoint x="400" y="798"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Portale_D_3_di" bpmnElement="Flow_Portale_D_3">
+        <di:waypoint x="500" y="798"/>
+        <di:waypoint x="560" y="798"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Portale_D_4_di" bpmnElement="Flow_Portale_D_4">
+        <di:waypoint x="660" y="798"/>
+        <di:waypoint x="720" y="798"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
