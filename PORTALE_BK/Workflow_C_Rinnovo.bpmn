@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_3" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js" exporterVersion="14.0.0">
+  <bpmn:collaboration id="Collaboration_3">
+    <bpmn:participant id="Participant_Cliente_C" name="Cliente" processRef="Process_Cliente_C"/>
+    <bpmn:participant id="Participant_ERP_C" name="ERP / Fornitore" processRef="Process_ERP_C"/>
+    <bpmn:participant id="Participant_Portale_C" name="Portale BK-Service" processRef="Process_Portale_C"/>
+    <bpmn:messageFlow id="MessageFlow_C1" sourceRef="Activity_Cliente_Renew" targetRef="Activity_Port_Renew"/>
+    <bpmn:messageFlow id="MessageFlow_C2" sourceRef="Activity_ERP_Accoda_C" targetRef="Activity_Port_Poll_C"/>
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_Cliente_C" isExecutable="false">
+    <bpmn:startEvent id="Event_Cliente_C_Start" name="Licenza prossima a scadere">
+      <bpmn:outgoing>Flow_Cliente_C_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_Cliente_Renew" name="(Opzionale) POST /client/license/renew-request">
+      <bpmn:incoming>Flow_Cliente_C_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cliente_C_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Cliente_Paga_C" name="Cliente effettua pagamento per rinnovo">
+      <bpmn:incoming>Flow_Cliente_C_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cliente_C_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_Cliente_C_End" name="Licenza rinnovata">
+      <bpmn:incoming>Flow_Cliente_C_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Cliente_C_1" sourceRef="Event_Cliente_C_Start" targetRef="Activity_Cliente_Renew"/>
+    <bpmn:sequenceFlow id="Flow_Cliente_C_2" sourceRef="Activity_Cliente_Renew" targetRef="Activity_Cliente_Paga_C"/>
+    <bpmn:sequenceFlow id="Flow_Cliente_C_3" sourceRef="Activity_Cliente_Paga_C" targetRef="Event_Cliente_C_End"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_ERP_C" isExecutable="false">
+    <bpmn:startEvent id="Event_ERP_C_Start" name="Pagamento rinnovo ricevuto">
+      <bpmn:outgoing>Flow_ERP_C_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_ERP_Conferma_C" name="Conferma incasso">
+      <bpmn:incoming>Flow_ERP_C_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_ERP_C_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_ERP_Accoda_C" name="Accoda FORN_PAGAMENTO_CONFERMATO">
+      <bpmn:incoming>Flow_ERP_C_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_ERP_C_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_ERP_C_End" name="In coda per ALARM">
+      <bpmn:incoming>Flow_ERP_C_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_ERP_C_1" sourceRef="Event_ERP_C_Start" targetRef="Activity_ERP_Conferma_C"/>
+    <bpmn:sequenceFlow id="Flow_ERP_C_2" sourceRef="Activity_ERP_Conferma_C" targetRef="Activity_ERP_Accoda_C"/>
+    <bpmn:sequenceFlow id="Flow_ERP_C_3" sourceRef="Activity_ERP_Accoda_C" targetRef="Event_ERP_C_End"/>
+  </bpmn:process>
+
+  <bpmn:process id="Process_Portale_C" isExecutable="true">
+    <bpmn:startEvent id="Event_Port_C_Start" name="ALARM polling">
+      <bpmn:outgoing>Flow_Port_C_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_Port_Poll_C" name="GET /alarm → raccoglie evento">
+      <bpmn:incoming>Flow_Port_C_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Renew" name="Riceve renew-request (opzionale)">
+      <bpmn:incoming>Flow_Port_C_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_3</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Estende" name="Estende data_scadenza sulla stessa licenza">
+      <bpmn:incoming>Flow_Port_C_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_4</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_RigaPagamenti" name="Aggiunge riga in tabella Pagamenti">
+      <bpmn:incoming>Flow_Port_C_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Rifirma_C" name="Rifirma entitlement (stessi moduli, nuova scadenza)">
+      <bpmn:incoming>Flow_Port_C_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Evento_C" name="Crea evento PORT_LICENZA_RINNOVATA">
+      <bpmn:incoming>Flow_Port_C_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="Activity_Port_Email_C" name="Invia email di rinnovo confermato">
+      <bpmn:incoming>Flow_Port_C_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_Port_C_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="Event_Port_C_End" name="Rinnovo completato">
+      <bpmn:incoming>Flow_Port_C_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_Port_C_1" sourceRef="Event_Port_C_Start" targetRef="Activity_Port_Poll_C"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_2" sourceRef="Activity_Port_Poll_C" targetRef="Activity_Port_Renew"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_3" sourceRef="Activity_Port_Renew" targetRef="Activity_Port_Estende"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_4" sourceRef="Activity_Port_Estende" targetRef="Activity_Port_RigaPagamenti"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_5" sourceRef="Activity_Port_RigaPagamenti" targetRef="Activity_Port_Rifirma_C"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_6" sourceRef="Activity_Port_Rifirma_C" targetRef="Activity_Port_Evento_C"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_7" sourceRef="Activity_Port_Evento_C" targetRef="Activity_Port_Email_C"/>
+    <bpmn:sequenceFlow id="Flow_Port_C_8" sourceRef="Activity_Port_Email_C" targetRef="Event_Port_C_End"/>
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_3">
+    <bpmndi:BPMNPlane id="BPMNPlane_3" bpmnElement="Collaboration_3">
+      <bpmndi:BPMNShape id="Participant_Cliente_C_di" bpmnElement="Participant_Cliente_C" isHorizontal="true">
+        <dc:Bounds x="90" y="40" width="900" height="120"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Cliente_C_Start_di" bpmnElement="Event_Cliente_C_Start">
+        <dc:Bounds x="150" y="85" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Cliente_Renew_di" bpmnElement="Activity_Cliente_Renew">
+        <dc:Bounds x="240" y="63" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Cliente_Paga_C_di" bpmnElement="Activity_Cliente_Paga_C">
+        <dc:Bounds x="400" y="63" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Cliente_C_End_di" bpmnElement="Event_Cliente_C_End">
+        <dc:Bounds x="560" y="85" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Cliente_C_1_di" bpmnElement="Flow_Cliente_C_1">
+        <di:waypoint x="186" y="103"/>
+        <di:waypoint x="240" y="103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cliente_C_2_di" bpmnElement="Flow_Cliente_C_2">
+        <di:waypoint x="340" y="103"/>
+        <di:waypoint x="400" y="103"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cliente_C_3_di" bpmnElement="Flow_Cliente_C_3">
+        <di:waypoint x="500" y="103"/>
+        <di:waypoint x="560" y="103"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="Participant_ERP_C_di" bpmnElement="Participant_ERP_C" isHorizontal="true">
+        <dc:Bounds x="90" y="220" width="900" height="150"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ERP_C_Start_di" bpmnElement="Event_ERP_C_Start">
+        <dc:Bounds x="150" y="280" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ERP_Conferma_C_di" bpmnElement="Activity_ERP_Conferma_C">
+        <dc:Bounds x="240" y="258" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ERP_Accoda_C_di" bpmnElement="Activity_ERP_Accoda_C">
+        <dc:Bounds x="400" y="258" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ERP_C_End_di" bpmnElement="Event_ERP_C_End">
+        <dc:Bounds x="560" y="280" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ERP_C_1_di" bpmnElement="Flow_ERP_C_1">
+        <di:waypoint x="186" y="298"/>
+        <di:waypoint x="240" y="298"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ERP_C_2_di" bpmnElement="Flow_ERP_C_2">
+        <di:waypoint x="340" y="298"/>
+        <di:waypoint x="400" y="298"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ERP_C_3_di" bpmnElement="Flow_ERP_C_3">
+        <di:waypoint x="500" y="298"/>
+        <di:waypoint x="560" y="298"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNShape id="Participant_Portale_C_di" bpmnElement="Participant_Portale_C" isHorizontal="true">
+        <dc:Bounds x="90" y="440" width="900" height="280"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Port_C_Start_di" bpmnElement="Event_Port_C_Start">
+        <dc:Bounds x="150" y="540" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Poll_C_di" bpmnElement="Activity_Port_Poll_C">
+        <dc:Bounds x="240" y="518" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Renew_di" bpmnElement="Activity_Port_Renew">
+        <dc:Bounds x="400" y="518" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Estende_di" bpmnElement="Activity_Port_Estende">
+        <dc:Bounds x="560" y="518" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_RigaPagamenti_di" bpmnElement="Activity_Port_RigaPagamenti">
+        <dc:Bounds x="150" y="650" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Rifirma_C_di" bpmnElement="Activity_Port_Rifirma_C">
+        <dc:Bounds x="300" y="650" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Evento_C_di" bpmnElement="Activity_Port_Evento_C">
+        <dc:Bounds x="450" y="650" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_Port_Email_C_di" bpmnElement="Activity_Port_Email_C">
+        <dc:Bounds x="600" y="650" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Port_C_End_di" bpmnElement="Event_Port_C_End">
+        <dc:Bounds x="760" y="672" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="Flow_Port_C_1_di" bpmnElement="Flow_Port_C_1">
+        <di:waypoint x="186" y="558"/>
+        <di:waypoint x="240" y="558"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_2_di" bpmnElement="Flow_Port_C_2">
+        <di:waypoint x="340" y="558"/>
+        <di:waypoint x="400" y="558"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_3_di" bpmnElement="Flow_Port_C_3">
+        <di:waypoint x="500" y="558"/>
+        <di:waypoint x="560" y="558"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_4_di" bpmnElement="Flow_Port_C_4">
+        <di:waypoint x="610" y="598"/>
+        <di:waypoint x="200" y="650"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_5_di" bpmnElement="Flow_Port_C_5">
+        <di:waypoint x="250" y="690"/>
+        <di:waypoint x="300" y="690"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_6_di" bpmnElement="Flow_Port_C_6">
+        <di:waypoint x="400" y="690"/>
+        <di:waypoint x="450" y="690"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_7_di" bpmnElement="Flow_Port_C_7">
+        <di:waypoint x="550" y="690"/>
+        <di:waypoint x="600" y="690"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Port_C_8_di" bpmnElement="Flow_Port_C_8">
+        <di:waypoint x="700" y="690"/>
+        <di:waypoint x="760" y="690"/>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="MessageFlow_C1_di" bpmnElement="MessageFlow_C1">
+        <di:waypoint x="290" y="143"/>
+        <di:waypoint x="450" y="518"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_C2_di" bpmnElement="MessageFlow_C2">
+        <di:waypoint x="450" y="338"/>
+        <di:waypoint x="290" y="518"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
