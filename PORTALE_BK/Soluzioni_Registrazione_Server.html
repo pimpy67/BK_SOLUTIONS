@@ -47,16 +47,31 @@
   <strong>Argomento:</strong> Come certifichiamo il server del Fornitore alla registrazione?
 </p>
 
+<div class="box blue">
+  <strong>Glossario dei ruoli</strong>
+  <table style="margin:8px 0 0 0;">
+    <tr><th>Termine</th><th>Chi è</th><th>Nel sistema</th></tr>
+    <tr><td><strong>BK Solutions</strong></td><td>Sviluppa e vende il servizio di licensing</td><td>Operatore del Portale e dell'ERP</td></tr>
+    <tr><td><strong>Software House</strong></td><td>Azienda che acquista la licenza da BK e integra la libreria nel suo server</td><td><code>dbo.Clienti</code> nel DB</td></tr>
+    <tr><td><strong>ERP BK</strong></td><td>Gestionale interno di BK Solutions (es. Business Central)</td><td>Genera gli eventi ALARM — <strong>non è un sistema della Software House</strong></td></tr>
+    <tr><td><strong>Utente finale</strong></td><td>Chi usa l'app della Software House</td><td>Fuori dal nostro sistema</td></tr>
+  </table>
+  <p style="margin-top:8px">
+    ⚠️ <strong>Nota:</strong> Il Portale fa polling ALARM verso l'<strong>ERP interno di BK Solutions</strong>, non verso sistemi della Software House.
+    Quando la Software House paga BK, è l'ERP di BK a registrare il pagamento e a generare l'evento di attivazione.
+  </p>
+</div>
+
 <div class="box">
-  <strong>Contesto:</strong> La libreria BK è installata sul <strong>server del Fornitore</strong> (la software house cliente di BK),
+  <strong>Contesto:</strong> La libreria BK è installata sul <strong>server della Software House</strong> (l'azienda cliente di BK),
   non sul dispositivo dell'utente finale. Esistono due momenti distinti in cui avviene la registrazione:
   <ul>
-    <li><strong>Trial</strong> — il Fornitore è sconosciuto, nessun contratto, nessuna chiave pre-condivisa</li>
-    <li><strong>Post-acquisto</strong> — il contratto esiste, BK conosce già il Fornitore</li>
+    <li><strong>Trial</strong> — la Software House è sconosciuta a BK, nessun contratto, nessuna chiave pre-condivisa</li>
+    <li><strong>Post-acquisto</strong> — il contratto esiste, BK conosce già la Software House</li>
   </ul>
   Le soluzioni 1 e 3 coprono questi due scenari diversi. I tre rischi da coprire in entrambi:
   <ul>
-    <li>✅ Server legittimo del Fornitore</li>
+    <li>✅ Server legittimo della Software House</li>
     <li>❌ Server di qualcuno che ha rubato le credenziali</li>
     <li>❌ Server aggiuntivo oltre il limite di istanze acquistate</li>
   </ul>
@@ -65,14 +80,14 @@
 <!-- ═══════════════════════════════════════════════════════ SOLUZIONE 1 -->
 <h2><span class="tag">Soluzione 1</span> &nbsp;Email + Codice OTP &nbsp;<span class="tag ctx">Scenario: TRIAL</span></h2>
 
-<p>Il Fornitore non ha ancora firmato nulla con BK. Vuole provare il prodotto gratuitamente per 30 giorni.
+<p>La Software House non ha ancora firmato nulla con BK. Vuole provare il prodotto gratuitamente per 30 giorni.
 Non esiste nessuna chiave pre-condivisa: l'OTP via email è l'<strong>unica verifica di identità possibile</strong>.</p>
 
 <h3>Da dove prendiamo l'email per mandare l'OTP?</h3>
-<p>Il Fornitore è sconosciuto al Portale. Tre sotto-opzioni:</p>
+<p>La Software House è sconosciuta al Portale. Tre sotto-opzioni:</p>
 
 <div class="subopt">
-  <strong>1a — Il Fornitore include l'email nella chiamata di registrazione (più semplice)</strong>
+  <strong>1a — La Software House include l'email nella chiamata di registrazione (più semplice)</strong>
   <pre>POST /client/register
 {
   "p_iva":           "12345678901",
@@ -81,7 +96,7 @@ Non esiste nessuna chiave pre-condivisa: l'OTP via email è l'<strong>unica veri
   "product_key":     "BK-INV-001",
   "fingerprint":     "a3f7c2d1..."
 }</pre>
-  Il Portale manda l'OTP a quell'email. Semplice, ma il Fornitore potrebbe inserire un'email non sua.
+  Il Portale manda l'OTP a quell'email. Semplice, ma la Software House potrebbe inserire un'email non sua.
 </div>
 
 <div class="subopt">
@@ -91,7 +106,7 @@ Non esiste nessuna chiave pre-condivisa: l'OTP via email è l'<strong>unica veri
 </div>
 
 <div class="subopt">
-  <strong>1c — Il Fornitore si registra prima sul portale web BK, poi installa la libreria</strong>
+  <strong>1c — La Software House si registra prima sul portale web BK, poi installa la libreria</strong>
   <pre>Portale web BK:
   [Form registrazione trial] → Fornitore inserisce P.IVA, email, ragione sociale
   → Verifica email → Account creato → BK genera TRIAL_KEY
@@ -128,7 +143,7 @@ Libreria sul server:
        |   expires_in: 900 }                  |                            |
        |<─────────────────────────────────────|                            |
        |                                      |                            |
-       |   [Admin Fornitore legge l'email     |                            |
+       |   [Admin Software House legge email  |                            |
        |    e comunica il codice alla         |                            |
        |    libreria tramite variabile        |                            |
        |    d'ambiente o config]              |                            |
@@ -184,20 +199,20 @@ Libreria sul server:
     </td>
   </tr>
 </table>
-<p><strong>Adatta per:</strong> Scenario TRIAL — Fornitore sconosciuto, nessun contratto preesistente.</p>
+<p><strong>Adatta per:</strong> Scenario TRIAL — Software House sconosciuta, nessun contratto preesistente.</p>
 
 <hr class="section-divider">
 
 <!-- ═══════════════════════════════════════════════════════ SOLUZIONE 2 -->
 <h2><span class="tag">Soluzione 2</span> &nbsp;INSTALL_KEY pre-condivisa &nbsp;<span class="tag ctx">Scenario: POST-ACQUISTO</span></h2>
 
-<p>Il Fornitore ha già firmato il contratto con BK. BK genera una chiave univoca e la consegna al Fornitore.
+<p>La Software House ha già firmato il contratto con BK. BK genera una chiave univoca e la consegna alla Software House.
 Il server si registra automaticamente senza alcun intervento umano.</p>
 
 <pre>
 [Alla firma del contratto]
-BK genera INSTALL_KEY univoca → consegnata al Fornitore via portale/email sicura
-Fornitore configura il server: INSTALL_KEY=BK-a3f7-c2d1-e9b4-xxxx
+BK genera INSTALL_KEY univoca → consegnata alla Software House via portale/email sicura
+Software House configura il server: INSTALL_KEY=BK-a3f7-c2d1-e9b4-xxxx
 
 [Ad ogni avvio del server]
 Server → POST /register { p_iva, product_key, fingerprint, install_key }
@@ -214,25 +229,25 @@ Server → POST /register { p_iva, product_key, fingerprint, install_key }
     </td>
     <td>
       <span class="con">❌</span> Se la chiave viene rubata, chiunque può usarla<br>
-      <span class="con">❌</span> Nessuna verifica che il server appartenga davvero al Fornitore<br>
+      <span class="con">❌</span> Nessuna verifica che il server appartenga davvero alla Software House<br>
       <span class="con">❌</span> Richiede processo sicuro di consegna iniziale
     </td>
   </tr>
 </table>
-<p><strong>Adatta per:</strong> Fornitori con infrastrutture automatizzate e deploy frequenti.</p>
+<p><strong>Adatta per:</strong> Software House con infrastrutture automatizzate e deploy frequenti.</p>
 
 <hr class="section-divider">
 
 <!-- ═══════════════════════════════════════════════════════ SOLUZIONE 3 -->
 <h2 class="rec"><span class="tag rec">Soluzione 3 ⭐ Consigliata</span> &nbsp;INSTALL_KEY + OTP solo alla prima istanza &nbsp;<span class="tag ctx">Scenario: POST-ACQUISTO</span></h2>
 
-<p>Il Fornitore ha già firmato il contratto con BK. BK conosce la sua P.IVA, email e quante istanze
+<p>La Software House ha già firmato il contratto con BK. BK conosce la sua P.IVA, email e quante istanze
 ha acquistato. La verifica via OTP avviene <strong>una sola volta per ogni nuova istanza server</strong>;
 i riavvii successivi sono completamente automatici.</p>
 
 <div class="box green">
   <strong>Nota importante:</strong> questa soluzione si applica <strong>dopo la trial</strong> (o per acquisti diretti senza trial).
-  Per la prima registrazione di un Fornitore sconosciuto si usa la Soluzione 1.
+  Per la prima registrazione di una Software House sconosciuta si usa la Soluzione 1.
 </div>
 
 <h3>Prima registrazione di una nuova istanza server</h3>
@@ -253,8 +268,8 @@ i riavvii successivi sono completamente automatici.</p>
        |                                      | 5. Genera OTP              |
        |                                      |───────────────────────────>|
        |                                      |    "Nuovo server rilevato  |
-       |                                      |     Codice attivazione:    |
-       |                                      |     719823"                |
+       |                                      |     sulla vostra licenza.  |
+       |                                      |     Codice: 719823"        |
        | 202 Accepted                         |                            |
        | { pending_token, expires_in: 900 }   |                            |
        |<─────────────────────────────────────|                            |
@@ -332,7 +347,7 @@ i riavvii successivi sono completamente automatici.</p>
     </td>
   </tr>
 </table>
-<p><strong>Adatta per:</strong> Scenario post-acquisto — contratto firmato, licenza enterprise attiva.</p>
+<p><strong>Adatta per:</strong> Scenario post-acquisto — contratto firmato tra Software House e BK Solutions, licenza enterprise attiva.</p>
 
 <hr class="section-divider">
 
@@ -393,21 +408,21 @@ Server → GET /register/status?pending_token=...  (ogni 5 sec)
 <h2>Schema: quale soluzione per quale momento</h2>
 <table>
   <tr><th>Momento</th><th>Soluzione</th><th>Motivo</th></tr>
-  <tr><td><strong>Trial</strong> — Fornitore sconosciuto</td><td>Soluzione 1</td><td>Nessuna chiave pre-condivisa, OTP è l'unica verifica</td></tr>
-  <tr><td><strong>Post-acquisto</strong> — Prima istanza</td><td>Soluzione 3</td><td>INSTALL_KEY garantisce il contratto, OTP conferma il server</td></tr>
+  <tr><td><strong>Trial</strong> — Software House sconosciuta a BK</td><td>Soluzione 1</td><td>Nessuna chiave pre-condivisa, OTP è l'unica verifica</td></tr>
+  <tr><td><strong>Post-acquisto</strong> — Prima istanza server</td><td>Soluzione 3</td><td>INSTALL_KEY garantisce il contratto, OTP conferma il server</td></tr>
   <tr><td><strong>Post-acquisto</strong> — Riavvio stesso server</td><td>Soluzione 3 automatica</td><td>Fingerprint già nel DB, nessuna interazione</td></tr>
   <tr><td><strong>Post-acquisto</strong> — Nuova istanza aggiuntiva</td><td>Soluzione 3 con OTP</td><td>Nuovo fingerprint → verifica umana una tantum</td></tr>
-  <tr><td><strong>Istanza non autorizzata</strong></td><td>Blocco + alert email</td><td>max_istanze superato → notifica al Fornitore legittimo</td></tr>
+  <tr><td><strong>Istanza non autorizzata</strong></td><td>Blocco + alert email</td><td>max_istanze superato → notifica alla Software House legittima</td></tr>
 </table>
 
 <!-- ═══════════════════════════════════════════════════════ DOMANDE -->
 <h2>Domande per Alvise</h2>
 <ol>
-  <li>Il Fornitore usa CI/CD e deploy automatici? → Se sì, Soluzione 2 o 3 è obbligatoria</li>
-  <li>Per la trial: il Fornitore include l'email nella chiamata (opzione 1a) o si registra prima sul portale web (opzione 1c)?</li>
+  <li>La Software House usa CI/CD e deploy automatici? → Se sì, Soluzione 2 o 3 è obbligatoria</li>
+  <li>Per la trial: la Software House include l'email nella chiamata (opzione 1a) o si registra prima sul portale web BK (opzione 1c)?</li>
   <li>Preferiamo OTP numerico (Sol. 1 e 3) o link email (Sol. 4)?</li>
   <li>La INSTALL_KEY viene generata manualmente da un operatore BK o automaticamente alla firma del contratto?</li>
-  <li>In caso di istanza non autorizzata: blocchiamo subito o mandiamo prima un alert al Fornitore?</li>
+  <li>In caso di istanza non autorizzata: blocchiamo subito o mandiamo prima un alert alla Software House?</li>
 </ol>
 
 </body>

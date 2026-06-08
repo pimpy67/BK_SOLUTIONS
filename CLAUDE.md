@@ -5,17 +5,35 @@ Aggiornato: 8 giugno 2026.
 
 ---
 
+## Glossario dei ruoli — IMPORTANTE
+
+Il termine "Fornitore" nei documenti originali (riunione, BPMN) è ambiguo. Usare sempre questa tabella:
+
+| Termine | Chi è | Nel sistema |
+|---------|-------|-------------|
+| **BK Solutions** | Chi sviluppa e vende il servizio di licensing | Operatore del Portale |
+| **Software House** | Azienda che **acquista** la licenza da BK e integra la libreria nel suo server | `dbo.Clienti` nel DB |
+| **ERP BK** | Gestionale interno di BK Solutions (es. Business Central) | Sistema che genera gli eventi ALARM |
+| **Utente finale** | Chi usa l'applicazione della Software House | **Fuori dal nostro sistema** |
+
+> Nei BPMN la lane "ERP/Fornitore" = **ERP interno di BK Solutions**, non un sistema della Software House.
+> Il Portale fa polling ALARM verso BK stesso, non verso la Software House.
+
+---
+
 ## Cos'è questo progetto
 
 **BK Invoice Service** è un sistema di gestione licenze software B2B sviluppato da BK Solutions.
-Permette ai Fornitori (software house clienti di BK) di proteggere le loro applicazioni tramite
+Permette alle **Software House** clienti di BK di proteggere le loro applicazioni tramite
 una libreria client che si registra e valida le licenze presso un server centrale (il Portale).
 
 ### Modello di business
-- BK Solutions vende licenze enterprise ai **Fornitori** (software house)
-- Il Fornitore integra la **Libreria Client** nel suo server applicativo
+- BK Solutions vende licenze enterprise alle **Software House**
+- La Software House integra la **Libreria Client** nel suo server applicativo
 - La libreria si auto-registra al primo avvio del server e valida periodicamente la licenza
-- Gli utenti finali dell'applicazione del Fornitore sono **fuori dal nostro sistema**
+- Quando la Software House paga BK, l'**ERP interno di BK** registra il pagamento
+- Il Portale fa polling verso l'**ERP di BK** (non della Software House) per attivare le licenze
+- Gli utenti finali dell'applicazione della Software House sono **fuori dal nostro sistema**
 
 ---
 
@@ -60,28 +78,31 @@ BK_ANALISI/
 ### Tre componenti principali
 
 ```
-[Libreria Client]  ←→  [Portale BK-Service]  ←→  [ERP Fornitore]
-  (nel server           (backend centrale)         (gestionale vendite)
-   del Fornitore)
+[Libreria Client]  ←→  [Portale BK-Service]  ←→  [ERP interno BK]
+  (nel server della      (backend centrale)         (gestionale BK,
+   Software House)                                   es. Business Central)
 ```
 
-- **Libreria Client**: integrata nel server del Fornitore. Si registra, ottiene l'entitlement firmato, lo salva in cache, invia heartbeat periodici.
-- **Portale BK-Service**: server centrale BK. Espone API REST. Unica chiamata in uscita: il polling ALARM verso l'ERP.
-- **ERP Fornitore**: gestionale del Fornitore. Registra pagamenti e li mette in coda. Il Portale fa polling (GET /alarm) per raccoglierli.
+- **Libreria Client**: integrata nel server della Software House. Si registra, ottiene l'entitlement firmato, lo salva in cache, invia heartbeat periodici.
+- **Portale BK-Service**: server centrale di BK Solutions. Espone API REST. Unica chiamata in uscita: il polling ALARM verso l'ERP interno BK.
+- **ERP interno BK**: gestionale di BK Solutions. Quando una Software House paga, l'ERP mette l'evento in coda. Il Portale fa polling (GET /alarm) per raccoglierlo e attivare la licenza.
 
 ### Flusso di registrazione (Workflow A)
 
-1. Fornitore installa server applicativo con INSTALL_KEY nel config
-2. Libreria genera fingerprint = `hash(INSTALL_KEY + hostname)`
-3. `POST /client/register` → Portale valida P.IVA e product_key, crea cliente e genera `registration_token` (JWT, ~100 sec)
+1. Software House installa server applicativo con INSTALL_KEY nel config (post-acquisto) o senza (trial)
+2. Libreria genera fingerprint = `hash(INSTALL_KEY + hostname)` oppure solo fingerprint per la trial
+3. `POST /client/register` → Portale valida P.IVA e product_key, crea la Software House nel DB e genera `registration_token` (JWT, ~100 sec)
 4. `POST /client/license/issue` → Portale crea licenza TRIAL, registra istanza server, firma entitlement (JWT RS256)
 5. Libreria salva entitlement in cache e sblocca le funzioni trial
+
+**Trial (Soluzione 1):** nessuna INSTALL_KEY pre-condivisa → verifica via OTP email alla prima registrazione
+**Post-acquisto (Soluzione 3):** INSTALL_KEY consegnata da BK → OTP email solo alla prima nuova istanza, poi automatico
 
 ### Stati licenza
 
 ```
-TRIAL → ACTIVE (dopo pagamento confermato via ALARM)
-ACTIVE → SUSPENDED (mancato pagamento / comando fornitore)
+TRIAL → ACTIVE (dopo pagamento Software House a BK, confermato via ALARM dall'ERP interno BK)
+ACTIVE → SUSPENDED (mancato pagamento / comando da ERP BK)
 ACTIVE → EXPIRED (scadenza non rinnovata)
 * → ACTIVE (rinnovo via Workflow C)
 ```
@@ -104,7 +125,7 @@ File: `PORTALE_BK/bk_invoice_service_schema.sql`
 |---------|-------|
 | `Prodotti` | Catalogo app con chiave univoca |
 | `Moduli` | Funzionalità attivabili per prodotto |
-| `Clienti` | Anagrafica Fornitori (P.IVA, SDI, PEC) — NON utenti finali |
+| `Clienti` | Anagrafica Software House (P.IVA, SDI, PEC) — NON utenti finali |
 | `Licenze` | Una riga per coppia cliente+prodotto |
 | `Licenze_Moduli` | N:M — moduli attivi per licenza |
 | `Dispositivi` | Istanze server autorizzate (heartbeat) |
@@ -130,8 +151,8 @@ Convenzioni schema:
 | Autenticazione | JWT tra sistemi (no login utente finale) |
 | Firma entitlement | RS256 (RSA asimmetrico) — client verifica offline con chiave pubblica embedded |
 | Fingerprint | `hash(INSTALL_KEY + hostname)` — no hardware fingerprint (instabile su VM/Docker) |
-| ALARM | Polling GET verso ERP, unica chiamata in uscita del Portale |
-| Offline | Cache entitlement firmato sul server del Fornitore |
+| ALARM | Polling GET verso **ERP interno BK** (non verso la Software House), unica chiamata in uscita del Portale |
+| Offline | Cache entitlement firmato sul server della Software House |
 | Multilingua | Richiesta da subito, IT + EN — approccio DB da definire |
 | C# | **Escluso** da Alvise |
 
