@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BK Shield — C1 Registrazione Cliente</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      background: #f5f7fb;
+      padding: 32px 24px;
+    }
+
+    /* ── Page container ── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .doc-header {
+      background: linear-gradient(135deg, #1B3A6B 0%, #0B1D3E 100%);
+      color: white;
+      padding: 32px 40px 28px;
+    }
+    .doc-header .service-name {
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+    .doc-header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .doc-header .subtitle {
+      font-size: 13px;
+      opacity: 0.75;
+    }
+    .doc-header .meta {
+      margin-top: 18px;
+      display: flex;
+      gap: 24px;
+      font-size: 11px;
+      opacity: 0.65;
+    }
+    .doc-header .meta span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── Content ── */
+    .content { padding: 36px 40px; }
+
+    /* ── Section titles ── */
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0F2D5E;
+      border-bottom: 2px solid #e0e7f3;
+      padding-bottom: 8px;
+      margin: 32px 0 16px;
+    }
+    h2:first-child { margin-top: 0; }
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1B3A6B;
+      margin: 22px 0 10px;
+    }
+    h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 16px 0 8px;
+    }
+
+    /* ── Principle box ── */
+    .principle {
+      background: #EEF3FB;
+      border-left: 4px solid #2563EB;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .principle p { margin-bottom: 6px; }
+    .principle p:last-child { margin-bottom: 0; }
+    .principle strong { color: #0F2D5E; }
+
+    /* ── Endpoint badge ── */
+    .endpoint-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #0F2D5E;
+      color: white;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-bottom: 20px;
+    }
+    .endpoint-badge .method {
+      background: #22C55E;
+      color: white;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    /* ── Phase tabs ── */
+    .phase-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+    .phase-card {
+      border-radius: 8px;
+      padding: 18px 20px;
+      border: 1.5px solid;
+    }
+    .phase-card.trial {
+      border-color: #93C5FD;
+      background: #EFF6FF;
+    }
+    .phase-card.purchase {
+      border-color: #6EE7B7;
+      background: #ECFDF5;
+    }
+    .phase-card .phase-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 10px;
+    }
+    .phase-card.trial .phase-title { color: #1D4ED8; }
+    .phase-card.purchase .phase-title { color: #065F46; }
+    .phase-card ul { padding-left: 16px; }
+    .phase-card li { margin-bottom: 4px; font-size: 12px; }
+
+    /* ── Code blocks ── */
+    pre {
+      background: #0F1A2E;
+      color: #E2E8F0;
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      margin: 10px 0;
+    }
+    .json-key    { color: #7DD3FC; }
+    .json-str    { color: #86EFAC; }
+    .json-comment{ color: #64748B; font-style: italic; }
+
+    /* ── Sequence diagram ── */
+    .seq-diagram {
+      background: #FAFAFA;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 11.5px;
+      line-height: 2;
+      margin: 10px 0;
+      color: #1a1a2e;
+    }
+    .seq-arrow   { color: #2563EB; font-weight: bold; }
+    .seq-label   { color: #7C3AED; }
+    .seq-note    { color: #64748B; font-style: italic; }
+    .seq-ok      { color: #16A34A; font-weight: bold; }
+    .seq-err     { color: #DC2626; font-weight: bold; }
+
+    /* ── Response status ── */
+    .responses { display: flex; flex-direction: column; gap: 10px; margin: 10px 0; }
+    .response-item {
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e0e7f3;
+    }
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .status-badge {
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 800;
+      color: white;
+    }
+    .s201 { background: #16A34A; }
+    .s200 { background: #2563EB; }
+    .s202 { background: #7C3AED; }
+    .s400 { background: #D97706; }
+    .s401 { background: #DC2626; }
+    .s403 { background: #9F1239; }
+    .s404 { background: #6B7280; }
+    .s409 { background: #B45309; }
+    .s410 { background: #92400E; }
+    .s422 { background: #B45309; }
+    .s429 { background: #7C3AED; }
+    .rh-201 { background: #F0FDF4; }
+    .rh-200 { background: #EFF6FF; }
+    .rh-202 { background: #FAF5FF; }
+    .rh-4xx { background: #FEF2F2; }
+    .response-item pre { border-radius: 0; margin: 0; }
+
+    /* ── Error table ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 12px;
+    }
+    th {
+      background: #0F2D5E;
+      color: white;
+      padding: 9px 14px;
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    td { padding: 8px 14px; border-bottom: 1px solid #E2E8F0; vertical-align: top; }
+    tr:nth-child(even) td { background: #F8FAFC; }
+    .code { font-family: 'Consolas', monospace; font-size: 11px; }
+
+    /* ── Notes ── */
+    .note {
+      background: #FFFBEB;
+      border-left: 3px solid #F59E0B;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+    .note strong { color: #92400E; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1px dashed #CBD5E1;
+      margin: 28px 0;
+    }
+
+    /* ── Footer ── */
+    .doc-footer {
+      background: #F1F5F9;
+      border-top: 1px solid #E2E8F0;
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    /* ── Print ── */
+    @media print {
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+      h2 { page-break-after: avoid; }
+      .phase-container { page-break-inside: avoid; }
+      pre { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="doc-header">
+    <div class="service-name">BK Shield — Specifiche API</div>
+    <h1>C1 — Registrazione Cliente</h1>
+    <div class="subtitle">Endpoint: <code>POST /api/client/register</code></div>
+    <div class="meta">
+      <span>📅 8 giugno 2026</span>
+      <span>📋 Versione 1.0</span>
+      <span>👤 Team BK Solutions</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PRINCIPIO ARCHITETTURALE -->
+    <h2>Principio architetturale</h2>
+    <div class="principle">
+      <p>Il Portale <strong>non blocca mai le app in real-time</strong>: emette un <strong>entitlement firmato</strong> (JWT RS256)
+      che dichiara i diritti della licenza (moduli attivi, scadenza, max istanze). La libreria client
+      verifica la firma con la <strong>chiave pubblica embedded</strong> e applica le regole localmente.</p>
+      <p>Se la licenza è scaduta o un modulo non è incluso, è <strong>la libreria</strong> a non sbloccare la funzionalità —
+      il Portale non interviene in real-time.</p>
+      <p>L'<strong>unica chiamata in uscita</strong> del Portale è il polling ALARM verso l'ERP interno di BK Solutions,
+      per raccogliere eventi come <code>PAGAMENTO_CONFERMATO</code> o <code>SOSPENDI_LICENZA</code>.</p>
+    </div>
+
+    <!-- ENDPOINT -->
+    <h2>Endpoint</h2>
+    <div class="endpoint-badge">
+      <span class="method">POST</span>
+      <span>/api/client/register</span>
+    </div>
+    <p><strong>Scopo:</strong> Prima iscrizione di una Software House al servizio BK Shield.
+    Il comportamento varia in base alla presenza o meno di una <code>install_key</code> nel body —
+    che distingue la fase <em>trial</em> dalla fase <em>post-acquisto</em>.</p>
+
+    <!-- DUE FASI -->
+    <h2>Le due fasi di registrazione</h2>
+    <div class="phase-container">
+      <div class="phase-card trial">
+        <div class="phase-title">Fase 1 — Trial</div>
+        <ul>
+          <li>Nessun contratto firmato</li>
+          <li>Nessuna <code>install_key</code></li>
+          <li>Nessun fingerprint</li>
+          <li>Attivazione immediata (no OTP)</li>
+          <li>Una trial per azienda per prodotto</li>
+          <li>Durata: 30 giorni</li>
+          <li>Identificativo: <code>vat_number + country</code></li>
+        </ul>
+      </div>
+      <div class="phase-card purchase">
+        <div class="phase-title">Fase 2 — Post-acquisto</div>
+        <ul>
+          <li>Contratto firmato, INSTALL_KEY consegnata</li>
+          <li><code>install_key</code> presente nel body</li>
+          <li>Fingerprint = <code>hash(install_key + hostname)</code></li>
+          <li>OTP email solo alla prima istanza</li>
+          <li>Istanze successive: automatico</li>
+          <li>Limite: <code>max_istanze</code> da contratto</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- REQUEST BODY -->
+    <h2>Request body</h2>
+    <pre><code><span class="json-comment">// Campi comuni a entrambe le fasi</span>
+{
+  <span class="json-key">"product_key"</span>:    <span class="json-str">"string"</span>,  <span class="json-comment">// Chiave prodotto inclusa nella libreria client</span>
+  <span class="json-key">"vat_number"</span>:     <span class="json-str">"string"</span>,  <span class="json-comment">// P.IVA o VAT number (formato libero, supporto estero)</span>
+  <span class="json-key">"country"</span>:        <span class="json-str">"string"</span>,  <span class="json-comment">// Codice paese ISO 3166-1 alpha-2 (es. "IT", "DE", "FR")</span>
+  <span class="json-key">"company_name"</span>:   <span class="json-str">"string"</span>,  <span class="json-comment">// Ragione sociale</span>
+  <span class="json-key">"contact_email"</span>:  <span class="json-str">"string"</span>,  <span class="json-comment">// Email per notifiche e OTP</span>
+  <span class="json-key">"contact_phone"</span>:  <span class="json-str">"string"</span>,  <span class="json-comment">// Telefono — opzionale</span>
+  <span class="json-key">"referent_name"</span>:  <span class="json-str">"string"</span>,  <span class="json-comment">// Nome e cognome del referente — opzionale</span>
+
+  <span class="json-comment">// Solo fase post-acquisto (se assenti → flusso trial)</span>
+  <span class="json-key">"install_key"</span>:    <span class="json-str">"string"</span>,  <span class="json-comment">// Chiave pre-condivisa generata da BK alla firma contratto</span>
+  <span class="json-key">"fingerprint"</span>:    <span class="json-str">"string"</span>   <span class="json-comment">// hash(install_key + hostname) — identifica l'istanza server</span>
+}</code></pre>
+
+    <div class="note">
+      <strong>Chiave univoca client:</strong> la combinazione <code>vat_number + country + product_key</code>
+      identifica univocamente una Software House per un dato prodotto.
+      Il campo <code>country</code> è necessario per supportare clienti con P.IVA estera (DE, FR, ES…).
+    </div>
+
+    <!-- FASE TRIAL -->
+    <h2>Fase 1 — Trial: flusso e risposte</h2>
+
+    <h3>Flusso</h3>
+    <div class="seq-diagram">
+<span class="seq-label">Libreria</span>                          <span class="seq-label">Portale BK</span>                     <span class="seq-label">DB</span>
+   │                                    │                                │
+   │  POST /api/client/register         │                                │
+   │  { product_key, vat_number,        │                                │
+   │    country, company_name,          │                                │
+   │    contact_email }                 │                                │
+   │ <span class="seq-arrow">──────────────────────────────────></span> │                                │
+   │                                    │  Valida product_key            │
+   │                                    │ <span class="seq-arrow">──────────────────────────────></span> │
+   │                                    │  Verifica nessuna trial attiva │
+   │                                    │  per vat_number + country      │
+   │                                    │ <span class="seq-arrow">──────────────────────────────></span> │
+   │                                    │  Crea cliente + licenza TRIAL  │
+   │                                    │  Firma entitlement JWT RS256   │
+   │                                    │  Genera license_key univoca    │
+   │                                    │ <span class="seq-arrow">──────────────────────────────></span> │
+   │  <span class="seq-ok">201 Created</span>                         │                                │
+   │  { license_key, entitlement_jwt,   │                                │
+   │    expires_at, modules[] }         │                                │
+   │ <span class="seq-arrow">&lt;──────────────────────────────────</span> │                                │
+   │                                    │                                │
+   │  Salva entitlement in cache locale │                                │
+   │  Verifica firma → sblocca moduli   │                                │
+   │                                    │                                │
+    </div>
+
+    <h3>Risposte</h3>
+    <div class="responses">
+
+      <div class="response-item">
+        <div class="response-header rh-201">
+          <span class="status-badge s201">201</span>
+          <span>Prima registrazione — trial attivata</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"status"</span>:        <span class="json-str">"trial_activated"</span>,
+  <span class="json-key">"license_key"</span>:   <span class="json-str">"LK-A1B2C3D4E5F6"</span>,   <span class="json-comment">// salvare nella libreria client</span>
+  <span class="json-key">"license_type"</span>:  <span class="json-str">"trial"</span>,
+  <span class="json-key">"expires_at"</span>:    <span class="json-str">"2026-07-08T23:59:59Z"</span>,
+  <span class="json-key">"modules"</span>:      [<span class="json-str">"modulo_a"</span>, <span class="json-str">"modulo_b"</span>]   <span class="json-comment">// configurati da BK per il prodotto</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-200">
+          <span class="status-badge s200">200</span>
+          <span>Già registrata — licenza ancora valida (idempotenza)</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"status"</span>:        <span class="json-str">"already_registered"</span>,
+  <span class="json-key">"license_key"</span>:   <span class="json-str">"LK-A1B2C3D4E5F6"</span>,
+  <span class="json-key">"license_type"</span>:  <span class="json-str">"trial"</span>,
+  <span class="json-key">"expires_at"</span>:    <span class="json-str">"2026-07-08T23:59:59Z"</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s409">409</span>
+          <span>Trial già utilizzata per questo prodotto</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:    <span class="json-str">"trial_already_used"</span>,
+  <span class="json-key">"message"</span>:  <span class="json-str">"Trial già utilizzata per questo prodotto. Contattare BK Solutions per acquistare la licenza."</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s404">404</span>
+          <span>Chiave prodotto non trovata</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:    <span class="json-str">"product_key_not_found"</span>,
+  <span class="json-key">"message"</span>:  <span class="json-str">"Chiave prodotto non valida o non attiva"</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s422">422</span>
+          <span>Dati mancanti o non validi</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:    <span class="json-str">"invalid_data"</span>,
+  <span class="json-key">"message"</span>:  <span class="json-str">"Uno o più campi obbligatori mancanti o non validi"</span>,
+  <span class="json-key">"fields"</span>:   [<span class="json-str">"contact_email"</span>]   <span class="json-comment">// lista dei campi con errore</span>
+}</code></pre>
+      </div>
+
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- FASE POST-ACQUISTO -->
+    <h2>Fase 2 — Post-acquisto: flusso e risposte</h2>
+
+    <h3>Flusso A — Prima istanza (nuova, OTP richiesto)</h3>
+    <div class="seq-diagram">
+<span class="seq-label">Libreria</span>                          <span class="seq-label">Portale BK</span>                     <span class="seq-label">DB / Email</span>
+   │                                    │                                │
+   │  POST /api/client/register         │                                │
+   │  { product_key, vat_number,        │                                │
+   │    country, install_key,           │                                │
+   │    fingerprint, ... }              │                                │
+   │ <span class="seq-arrow">──────────────────────────────────></span> │                                │
+   │                                    │  Valida install_key            │
+   │                                    │  Verifica fingerprint sconosciuto
+   │                                    │  Verifica max_istanze non superato
+   │                                    │  Genera OTP (6 cifre, 15 min)  │
+   │                                    │ <span class="seq-arrow">──────────────────────────────></span> │
+   │  <span class="seq-label">202 Accepted</span>                        │  Invia OTP a contact_email     │
+   │  { pending_token }                 │ <span class="seq-arrow">──────────────────────────────></span> │
+   │ <span class="seq-arrow">&lt;──────────────────────────────────</span> │                                │
+   │                                    │                                │
+   │  [Admin legge email e inserisce OTP]                                │
+   │                                    │                                │
+   │  POST /api/client/register/verify  │                                │
+   │  { pending_token, otp }            │                                │
+   │ <span class="seq-arrow">──────────────────────────────────></span> │                                │
+   │                                    │  Registra istanza (fingerprint)│
+   │                                    │  Firma entitlement JWT RS256   │
+   │  <span class="seq-ok">200 OK</span>                              │ <span class="seq-arrow">──────────────────────────────></span> │
+   │  { license_key, entitlement_jwt,   │                                │
+   │    expires_at, modules[] }         │                                │
+   │ <span class="seq-arrow">&lt;──────────────────────────────────</span> │                                │
+    </div>
+
+    <h3>Flusso B — Riavvio istanza già registrata (automatico)</h3>
+    <div class="seq-diagram">
+<span class="seq-label">Libreria</span>                          <span class="seq-label">Portale BK</span>
+   │                                    │
+   │  POST /api/client/register         │
+   │  { product_key, vat_number,        │
+   │    country, install_key,           │
+   │    fingerprint }                   │
+   │ <span class="seq-arrow">──────────────────────────────────></span> │
+   │                                    │  Fingerprint già nel DB ✓
+   │                                    │  install_key valida ✓
+   │                                    │  Firma entitlement aggiornato
+   │  <span class="seq-ok">200 OK</span>                              │
+   │  { license_key, entitlement_jwt,   │
+   │    expires_at, modules[] }         │
+   │ <span class="seq-arrow">&lt;──────────────────────────────────</span> │
+    </div>
+
+    <h3>Flusso C — Istanza non autorizzata (max_istanze superato)</h3>
+    <div class="seq-diagram">
+<span class="seq-label">Libreria</span>                          <span class="seq-label">Portale BK</span>                     <span class="seq-label">Email alert</span>
+   │                                    │                                │
+   │  POST /api/client/register         │                                │
+   │  { ..., install_key, fingerprint } │                                │
+   │ <span class="seq-arrow">──────────────────────────────────></span> │                                │
+   │                                    │  max_istanze già raggiunto     │
+   │                                    │  Fingerprint sconosciuto       │
+   │                                    │  Invia alert a contact_email   │
+   │                                    │ <span class="seq-arrow">──────────────────────────────></span> │
+   │  <span class="seq-err">403 Forbidden</span>                       │                                │
+   │  { error: "max_instances_reached" }│                                │
+   │ <span class="seq-arrow">&lt;──────────────────────────────────</span> │                                │
+    </div>
+
+    <h3>Risposte aggiuntive fase post-acquisto</h3>
+    <div class="responses">
+
+      <div class="response-item">
+        <div class="response-header rh-202">
+          <span class="status-badge s202">202</span>
+          <span>Prima istanza — OTP inviato, in attesa verifica</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"status"</span>:         <span class="json-str">"otp_sent"</span>,
+  <span class="json-key">"pending_token"</span>:  <span class="json-str">"eyJ..."</span>,   <span class="json-comment">// JWT temporaneo (~15 min)</span>
+  <span class="json-key">"message"</span>:        <span class="json-str">"Codice OTP inviato a conf***@example.com"</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s401">401</span>
+          <span>INSTALL_KEY non valida o non riconosciuta</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:    <span class="json-str">"install_key_invalid"</span>,
+  <span class="json-key">"message"</span>:  <span class="json-str">"INSTALL_KEY non riconosciuta per questo prodotto"</span>
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s403">403</span>
+          <span>Numero massimo di istanze raggiunto</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:          <span class="json-str">"max_instances_reached"</span>,
+  <span class="json-key">"message"</span>:        <span class="json-str">"Limite massimo di istanze server raggiunto per questa licenza"</span>,
+  <span class="json-key">"max_instances"</span>:  2,
+  <span class="json-key">"current"</span>:        2
+}</code></pre>
+      </div>
+
+      <div class="response-item">
+        <div class="response-header rh-4xx">
+          <span class="status-badge s403">403</span>
+          <span>Licenza sospesa</span>
+        </div>
+        <pre><code>{
+  <span class="json-key">"error"</span>:    <span class="json-str">"license_suspended"</span>,
+  <span class="json-key">"message"</span>:  <span class="json-str">"Licenza sospesa. Contattare BK Solutions."</span>
+}</code></pre>
+      </div>
+
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- TABELLA ERRORI COMPLETA -->
+    <h2>Tabella codici errore completa</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>HTTP</th>
+          <th>error code</th>
+          <th>Fase</th>
+          <th>Causa</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="code">200</span></td>
+          <td><span class="code">already_registered</span></td>
+          <td>Trial / Post-acquisto</td>
+          <td>Stessa istanza già registrata — risposta idempotente con dati correnti</td>
+        </tr>
+        <tr>
+          <td><span class="code">201</span></td>
+          <td><span class="code">trial_activated</span></td>
+          <td>Trial</td>
+          <td>Prima registrazione — trial attivata con successo</td>
+        </tr>
+        <tr>
+          <td><span class="code">202</span></td>
+          <td><span class="code">otp_sent</span></td>
+          <td>Post-acquisto</td>
+          <td>Prima istanza sconosciuta — OTP inviato, attesa verifica</td>
+        </tr>
+        <tr>
+          <td><span class="code">400</span></td>
+          <td><span class="code">otp_invalid</span></td>
+          <td>Post-acquisto</td>
+          <td>Codice OTP errato (max 3 tentativi)</td>
+        </tr>
+        <tr>
+          <td><span class="code">401</span></td>
+          <td><span class="code">install_key_invalid</span></td>
+          <td>Post-acquisto</td>
+          <td>INSTALL_KEY non riconosciuta o non associata al prodotto</td>
+        </tr>
+        <tr>
+          <td><span class="code">401</span></td>
+          <td><span class="code">install_key_mismatch</span></td>
+          <td>Post-acquisto</td>
+          <td>INSTALL_KEY non corrisponde al cliente già registrato</td>
+        </tr>
+        <tr>
+          <td><span class="code">403</span></td>
+          <td><span class="code">install_key_revoked</span></td>
+          <td>Post-acquisto</td>
+          <td>INSTALL_KEY revocata da BK Solutions</td>
+        </tr>
+        <tr>
+          <td><span class="code">403</span></td>
+          <td><span class="code">max_instances_reached</span></td>
+          <td>Post-acquisto</td>
+          <td>Nuova istanza sconosciuta ma limite contrattuale già raggiunto</td>
+        </tr>
+        <tr>
+          <td><span class="code">403</span></td>
+          <td><span class="code">license_suspended</span></td>
+          <td>Entrambe</td>
+          <td>Licenza sospesa per mancato pagamento o comando ERP</td>
+        </tr>
+        <tr>
+          <td><span class="code">404</span></td>
+          <td><span class="code">product_key_not_found</span></td>
+          <td>Entrambe</td>
+          <td>Chiave prodotto inesistente o disattivata</td>
+        </tr>
+        <tr>
+          <td><span class="code">409</span></td>
+          <td><span class="code">trial_already_used</span></td>
+          <td>Trial</td>
+          <td>P.IVA + paese già associati a una trial scaduta o revocata per quel prodotto</td>
+        </tr>
+        <tr>
+          <td><span class="code">410</span></td>
+          <td><span class="code">otp_expired</span></td>
+          <td>Post-acquisto</td>
+          <td>Codice OTP scaduto (15 minuti), richiederne uno nuovo</td>
+        </tr>
+        <tr>
+          <td><span class="code">422</span></td>
+          <td><span class="code">invalid_data</span></td>
+          <td>Entrambe</td>
+          <td>Campi obbligatori mancanti o formato non valido (email, country ISO)</td>
+        </tr>
+        <tr>
+          <td><span class="code">429</span></td>
+          <td><span class="code">too_many_attempts</span></td>
+          <td>Post-acquisto</td>
+          <td>Superati 3 tentativi OTP — attesa 15 minuti prima di un nuovo invio</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="divider"/>
+
+    <!-- NOTE IMPLEMENTATIVE -->
+    <h2>Note implementative</h2>
+
+    <h3>Generazione license_key</h3>
+    <p>La <code>license_key</code> è un identificatore opaco generato dal Portale con salt random.
+    Formato: <code>LK-[16 caratteri alfanumerici maiuscoli]</code>. La libreria client la salva
+    localmente e la include nell'header di tutte le chiamate successive
+    (<code>Authorization: Bearer &lt;license_key&gt;</code>).</p>
+
+    <h3>Entitlement JWT RS256</h3>
+    <p>Il payload del JWT contiene:</p>
+    <pre><code>{
+  <span class="json-key">"sub"</span>:          <span class="json-str">"LK-A1B2C3D4E5F6"</span>,   <span class="json-comment">// license_key</span>
+  <span class="json-key">"iss"</span>:          <span class="json-str">"bk-shield"</span>,
+  <span class="json-key">"iat"</span>:          1749340800,
+  <span class="json-key">"exp"</span>:          1752019200,             <span class="json-comment">// = expires_at</span>
+  <span class="json-key">"product_key"</span>:  <span class="json-str">"PROD-XXXX"</span>,
+  <span class="json-key">"license_type"</span>: <span class="json-str">"trial"</span>,             <span class="json-comment">// trial | subscription</span>
+  <span class="json-key">"modules"</span>:      [<span class="json-str">"modulo_a"</span>, <span class="json-str">"modulo_b"</span>],
+  <span class="json-key">"max_instances"</span>: 2                   <span class="json-comment">// solo post-acquisto</span>
+}</code></pre>
+    <p>La firma RS256 usa la <strong>chiave privata del Portale</strong>. La libreria client ha la
+    <strong>chiave pubblica embedded</strong> per verifica offline.</p>
+
+    <h3>Idempotenza</h3>
+    <p>L'endpoint è idempotente: chiamate ripetute con gli stessi parametri restituiscono
+    <code>200 already_registered</code> con i dati aggiornati, senza duplicare licenze nel DB.</p>
+
+    <div class="note">
+      <strong>Domande aperte per Alvise:</strong> INSTALL_KEY generata manualmente o automaticamente
+      alla firma contratto? Valore di <code>max_istanze</code> come definito contrattualmente?
+      Vedere <code>Checkpoint_Alvise.md</code> §9.
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <span>BK Shield — Specifiche API v1.0</span>
+    <span>8 giugno 2026 — Confidenziale BK Solutions</span>
+    <span>C1 Registrazione Cliente</span>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BK Shield — Portale BK-Service v2</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #1a1a2e;
+      background: #f0f4fa;
+      padding: 32px 20px;
+    }
+    .page {
+      max-width: 940px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 6px 32px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+
+    /* ── COVER ── */
+    .cover {
+      background: linear-gradient(140deg, #0F2D5E 0%, #1B4F9B 55%, #2563EB 100%);
+      color: white;
+      padding: 52px 52px 44px;
+      position: relative;
+    }
+    .cover .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .cover h1 { font-size: 34px; font-weight: 900; letter-spacing: -1px; margin-bottom: 6px; }
+    .cover .sub { font-size: 16px; opacity: 0.8; margin-bottom: 28px; }
+    .cover .meta-row { display: flex; gap: 28px; font-size: 11.5px; opacity: 0.65; flex-wrap: wrap; }
+    .cover .shield-watermark {
+      position: absolute;
+      right: 52px; top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.07;
+      font-size: 180px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    /* ── TOC ── */
+    .toc {
+      background: #F8FAFF;
+      border-bottom: 1px solid #E2E8F0;
+      padding: 28px 52px;
+    }
+    .toc h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #94A3B8; margin-bottom: 14px; }
+    .toc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; }
+    .toc a { color: #1B3A6B; text-decoration: none; font-size: 12.5px; display: flex; gap: 8px; padding: 3px 0; }
+    .toc a:hover { color: #2563EB; }
+    .toc .toc-num { color: #94A3B8; font-weight: 700; min-width: 20px; }
+
+    /* ── CONTENT ── */
+    .content { padding: 0 52px 48px; }
+
+    /* ── SECTION ── */
+    .section { padding-top: 40px; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #E0E7F3;
+    }
+    .section-num {
+      background: #0F2D5E;
+      color: white;
+      border-radius: 6px;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .section-header h2 { font-size: 18px; font-weight: 800; color: #0F2D5E; }
+
+    h3 { font-size: 14px; font-weight: 700; color: #1B3A6B; margin: 20px 0 10px; }
+    h4 { font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.8px; margin: 14px 0 7px; }
+    p { margin-bottom: 10px; }
+
+    /* ── ACTOR CARDS ── */
+    .actor-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 16px 0; }
+    .actor-card {
+      border-radius: 8px;
+      padding: 18px 16px;
+      border: 1.5px solid;
+    }
+    .actor-card.client  { border-color: #93C5FD; background: #EFF6FF; }
+    .actor-card.portale { border-color: #6EE7B7; background: #ECFDF5; }
+    .actor-card.erp     { border-color: #FCA5A5; background: #FFF1F2; }
+    .actor-card .actor-title {
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .actor-card.client  .actor-title { color: #1D4ED8; }
+    .actor-card.portale .actor-title { color: #065F46; }
+    .actor-card.erp     .actor-title { color: #9F1239; }
+    .actor-card p { font-size: 12px; margin-bottom: 0; color: #374151; }
+
+    /* ── ARCH DIAGRAM ── */
+    .arch-box {
+      background: #0F1A2E;
+      color: #E2E8F0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: 12px;
+      line-height: 2;
+      margin: 14px 0;
+    }
+    .arch-box .ah { color: #7DD3FC; font-weight: bold; }
+    .arch-box .an { color: #86EFAC; }
+    .arch-box .ac { color: #64748B; font-style: italic; }
+
+    /* ── PRINCIPLE BOX ── */
+    .principle {
+      background: #EEF3FB;
+      border-left: 4px solid #2563EB;
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 14px 0;
+    }
+    .principle strong { color: #0F2D5E; }
+
+    /* ── PHASE CARDS ── */
+    .phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+    .phase-card { border-radius: 8px; padding: 18px 18px; border: 1.5px solid; }
+    .phase-card.trial    { border-color: #93C5FD; background: #EFF6FF; }
+    .phase-card.purchase { border-color: #6EE7B7; background: #ECFDF5; }
+    .phase-card .pt {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1.2px; margin-bottom: 10px;
+    }
+    .phase-card.trial    .pt { color: #1D4ED8; }
+    .phase-card.purchase .pt { color: #065F46; }
+    .phase-card ul { padding-left: 16px; }
+    .phase-card li { font-size: 12px; margin-bottom: 3px; }
+
+    /* ── ENDPOINT TABLE ── */
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
+    th { background: #0F2D5E; color: white; padding: 9px 14px; text-align: left; font-size: 11px; letter-spacing: 0.5px; }
+    td { padding: 8px 14px; border-bottom: 1px solid #E2E8F0; vertical-align: top; }
+    tr:nth-child(even) td { background: #F8FAFC; }
+    .method-badge {
+      display: inline-block;
+      border-radius: 4px;
+      padding: 1px 7px;
+      font-size: 10px; font-weight: 800;
+      color: white; letter-spacing: 0.5px;
+    }
+    .get  { background: #2563EB; }
+    .post { background: #16A34A; }
+    code {
+      background: #F1F5F9;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: 11.5px;
+      color: #0F2D5E;
+    }
+
+    /* ── ENDPOINT DETAIL ── */
+    .endpoint-block {
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+    .ep-header {
+      background: #0F2D5E;
+      color: white;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .ep-body { padding: 16px 18px; }
+    .ep-body p { font-size: 12.5px; margin-bottom: 8px; }
+
+    /* ── CODE BLOCK ── */
+    pre {
+      background: #0F1A2E;
+      color: #E2E8F0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: 11.5px;
+      line-height: 1.8;
+      overflow-x: auto;
+      margin: 8px 0;
+    }
+    .jk { color: #7DD3FC; }
+    .js { color: #86EFAC; }
+    .jc { color: #64748B; font-style: italic; }
+    .jn { color: #FCA5A5; }
+
+    /* ── RESPONSE ROWS ── */
+    .resp-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed #E2E8F0;
+    }
+    .resp-row:last-child { border-bottom: none; }
+    .sbadge {
+      border-radius: 4px; padding: 2px 8px;
+      font-size: 11px; font-weight: 800; color: white;
+      white-space: nowrap; margin-top: 1px;
+    }
+    .s200{background:#2563EB} .s201{background:#16A34A} .s202{background:#7C3AED}
+    .s400{background:#D97706} .s401{background:#DC2626} .s403{background:#9F1239}
+    .s404{background:#6B7280} .s409{background:#B45309} .s410{background:#92400E}
+    .s422{background:#B45309} .s429{background:#7C3AED}
+    .resp-desc { font-size: 12px; }
+    .resp-desc strong { display: block; margin-bottom: 2px; color: #1a1a2e; }
+
+    /* ── ALARM EVENTS ── */
+    .event-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+    .event-card {
+      border-radius: 6px;
+      padding: 12px 14px;
+      border: 1px solid #E2E8F0;
+      background: #F8FAFC;
+    }
+    .event-card .ev-code {
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #0F2D5E;
+      margin-bottom: 4px;
+    }
+    .event-card .ev-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 4px;
+    }
+    .ev-trigger { color: #16A34A; }
+    .ev-info    { color: #2563EB; }
+    .ev-cmd     { color: #DC2626; }
+    .event-card p { font-size: 11.5px; color: #475569; margin: 0; }
+
+    /* ── STATE MACHINE ── */
+    .states {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 16px 0;
+    }
+    .state-node {
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      min-width: 110px;
+    }
+    .sn-trial    { background: #DBEAFE; color: #1D4ED8; border: 2px solid #93C5FD; }
+    .sn-active   { background: #DCFCE7; color: #166534; border: 2px solid #6EE7B7; }
+    .sn-susp     { background: #FEF3C7; color: #92400E; border: 2px solid #FCD34D; }
+    .sn-exp      { background: #FEE2E2; color: #9F1239; border: 2px solid #FCA5A5; }
+    .state-arrow { font-size: 20px; color: #94A3B8; padding: 0 6px; }
+    .state-label { font-size: 10px; color: #64748B; text-align: center; margin-top: 4px; }
+    .states-detail { margin: 14px 0; }
+    .sd-row { display: flex; gap: 12px; padding: 6px 0; border-bottom: 1px dashed #E2E8F0; font-size: 12px; align-items: flex-start; }
+    .sd-row:last-child { border-bottom: none; }
+    .sd-from { font-weight: 700; color: #1B3A6B; min-width: 140px; font-family: 'Consolas',monospace; font-size: 11px; }
+    .sd-trigger { color: #2563EB; font-family: 'Consolas',monospace; font-size: 11px; }
+
+    /* ── DB TABLES ── */
+    .db-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin: 14px 0; }
+    .db-group { border-radius: 8px; border: 1px solid #E2E8F0; overflow: hidden; }
+    .db-group-title { background: #0F2D5E; color: white; padding: 7px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+    .db-table-row { padding: 7px 14px; border-bottom: 1px solid #F1F5F9; font-size: 12px; display: flex; gap: 8px; }
+    .db-table-row:last-child { border-bottom: none; }
+    .db-table-name { font-family: 'Consolas',monospace; font-size: 11px; color: #0F2D5E; font-weight: 700; min-width: 150px; }
+
+    /* ── SECURITY ── */
+    .sec-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 14px 0; }
+    .sec-card { border-radius: 8px; padding: 16px; border: 1px solid #E2E8F0; background: #F8FAFC; }
+    .sec-card .sc-title { font-size: 12px; font-weight: 800; color: #0F2D5E; margin-bottom: 8px; }
+    .sec-card p { font-size: 12px; color: #374151; margin: 0; }
+
+    /* ── NOTE / WARNING ── */
+    .note {
+      background: #FFFBEB;
+      border-left: 3px solid #F59E0B;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+    .note strong { color: #92400E; }
+    .info {
+      background: #EFF6FF;
+      border-left: 3px solid #2563EB;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 12px;
+      margin: 10px 0;
+    }
+
+    /* ── DIVIDER ── */
+    hr { border: none; border-top: 1px dashed #CBD5E1; margin: 32px 0; }
+
+    /* ── FOOTER ── */
+    .doc-footer {
+      background: #F1F5F9;
+      border-top: 1px solid #E2E8F0;
+      padding: 14px 52px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    /* ── SEQ DIAGRAM ── */
+    .seq {
+      background: #FAFAFA;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 18px 22px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: 11.5px;
+      line-height: 2;
+      margin: 10px 0;
+    }
+    .sa { color: #2563EB; font-weight: bold; }
+    .sl { color: #7C3AED; font-weight: bold; }
+    .sn2 { color: #64748B; font-style: italic; }
+    .sok { color: #16A34A; font-weight: bold; }
+    .serr { color: #DC2626; font-weight: bold; }
+
+    /* ── PRINT ── */
+    @media print {
+      body { background: white; padding: 0; }
+      .page { box-shadow: none; border-radius: 0; }
+      .section { page-break-inside: avoid; }
+      .section-header { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══════════════════════════════════════════════════════
+     COVER
+══════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="shield-watermark">BK</div>
+  <div class="badge">Specifiche di Progetto</div>
+  <h1>BK Shield</h1>
+  <div class="sub">Portale BK-Service — Architettura e API</div>
+  <div class="meta-row">
+    <span>📅 8 giugno 2026</span>
+    <span>📋 Versione 2.0</span>
+    <span>🏢 BK Solutions</span>
+    <span>🔒 Confidenziale</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     INDICE
+══════════════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Indice</h2>
+  <div class="toc-grid">
+    <a href="#s1"><span class="toc-num">1</span> Obiettivi del progetto</a>
+    <a href="#s5"><span class="toc-num">5</span> ALARM — Unica chiamata in uscita</a>
+    <a href="#s2"><span class="toc-num">2</span> I tre soggetti</a>
+    <a href="#s6"><span class="toc-num">6</span> Sicurezza</a>
+    <a href="#s3"><span class="toc-num">3</span> Principio architetturale e due fasi</a>
+    <a href="#s7"><span class="toc-num">7</span> Stati della licenza</a>
+    <a href="#s4"><span class="toc-num">4</span> Endpoint lato CLIENT</a>
+    <a href="#s8"><span class="toc-num">8</span> Schema Database</a>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ══════════════════════════════════════════════════════
+     1. OBIETTIVI
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <h2>Obiettivi del progetto</h2>
+  </div>
+
+  <p><strong>BK Shield</strong> è un sistema di gestione licenze software B2B sviluppato da <strong>BK Solutions</strong>.
+  Permette alle <strong>Software House</strong> clienti di proteggere le proprie applicazioni tramite una
+  libreria client che si registra e valida le licenze presso un server centrale (il Portale).</p>
+
+  <h3>Modello di business</h3>
+  <ul style="padding-left:20px; margin-bottom:12px;">
+    <li style="margin-bottom:5px;">BK Solutions <strong>vende licenze enterprise</strong> alle Software House</li>
+    <li style="margin-bottom:5px;">La Software House integra la <strong>Libreria Client nel proprio server applicativo</strong> (non sui dispositivi degli utenti finali)</li>
+    <li style="margin-bottom:5px;">La libreria si auto-registra all'avvio del server e valida periodicamente la licenza</li>
+    <li style="margin-bottom:5px;">Quando la Software House paga BK, l'<strong>ERP interno di BK</strong> registra il pagamento</li>
+    <li style="margin-bottom:5px;">Il Portale fa polling verso l'ERP interno BK per attivare le licenze</li>
+    <li>Gli <strong>utenti finali</strong> dell'applicazione della Software House sono <strong>fuori dal sistema BK Shield</strong></li>
+  </ul>
+
+  <div class="info">
+    <strong>Glossario:</strong> nei documenti precedenti il termine "Fornitore" era ambiguo.
+    In questo documento: <strong>Software House</strong> = azienda che acquista la licenza da BK e integra la libreria.
+    <strong>ERP BK</strong> = gestionale interno di BK Solutions (es. Business Central), mai il sistema della Software House.
+  </div>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     2. TRE SOGGETTI
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <h2>I tre soggetti coinvolti</h2>
+  </div>
+
+  <div class="actor-grid">
+    <div class="actor-card client">
+      <div class="actor-title">Libreria Client</div>
+      <p>Integrata nel <strong>server della Software House</strong>. Si registra al primo avvio, ottiene l'entitlement firmato, lo salva in cache, invia heartbeat periodici. Verifica la firma offline con chiave pubblica embedded. Parla solo col Portale.</p>
+    </div>
+    <div class="actor-card portale">
+      <div class="actor-title">Portale BK-Service</div>
+      <p>Server centrale di BK Solutions. Riceve le chiamate dalla libreria, emette entitlement firmati, tiene lo stato delle licenze nel DB. <strong>Non blocca mai le app in real-time.</strong> Unica chiamata in uscita: il polling ALARM verso l'ERP BK.</p>
+    </div>
+    <div class="actor-card erp">
+      <div class="actor-title">ERP Interno BK</div>
+      <p>Gestionale di BK Solutions (es. Business Central). Quando una Software House paga, l'ERP mette l'evento in coda. Espone un endpoint ALARM che il Portale interroga periodicamente. <strong>Non è mai il sistema della Software House.</strong></p>
+    </div>
+  </div>
+
+  <div class="arch-box">
+<span class="ah">[Libreria Client]</span>          <span class="an">←→</span>     <span class="ah">[Portale BK-Service]</span>     <span class="an">→</span>     <span class="ah">[ERP interno BK]</span>
+<span class="ac"> nel server della                      backend centrale             gestionale BK</span>
+<span class="ac"> Software House                                                      es. Business Central</span>
+<span class="ac">                                                                     ↑</span>
+<span class="ac">                               unica chiamata in uscita (ALARM polling)</span>
+  </div>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     3. PRINCIPIO ARCHITETTURALE + DUE FASI
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <h2>Principio architetturale e due fasi</h2>
+  </div>
+
+  <h3>Principio fondamentale</h3>
+  <div class="principle">
+    <p>Il Portale <strong>non blocca mai le app in real-time</strong>: emette un <strong>entitlement firmato</strong> (JWT RS256)
+    che dichiara i diritti della licenza — moduli attivi, scadenza, numero massimo di istanze server.
+    La libreria verifica la firma con la <strong>chiave pubblica embedded</strong> e applica le regole localmente.</p>
+    <p>Se la licenza è scaduta o un modulo non è incluso, è <strong>la libreria</strong> a non sbloccare la funzionalità.
+    Il Portale non interviene in real-time. Questo garantisce il funzionamento anche in modalità <strong>offline</strong>
+    (server in manutenzione, intranet isolata).</p>
+  </div>
+
+  <h3>Le due fasi di registrazione</h3>
+  <div class="phase-grid">
+    <div class="phase-card trial">
+      <div class="pt">Fase 1 — Trial</div>
+      <ul>
+        <li>Nessun contratto firmato</li>
+        <li>Nessuna INSTALL_KEY, nessun fingerprint</li>
+        <li>Attivazione immediata — nessun OTP</li>
+        <li>Identificativo: <code>vat_number + country</code></li>
+        <li>Una sola trial per azienda per prodotto</li>
+        <li>Durata: 30 giorni, moduli configurati da BK</li>
+        <li>Risposta diretta: <code>license_key + entitlement JWT</code></li>
+      </ul>
+    </div>
+    <div class="phase-card purchase">
+      <div class="pt">Fase 2 — Post-acquisto</div>
+      <ul>
+        <li>Contratto firmato, INSTALL_KEY consegnata da BK</li>
+        <li>Fingerprint = <code>hash(install_key + hostname)</code></li>
+        <li>Prima istanza: OTP email (verifica una-tantum)</li>
+        <li>Istanze successive (fingerprint noto): automatico</li>
+        <li>Limite istanze: <code>max_istanze</code> da contratto</li>
+        <li>Attivazione TRIAL→ACTIVE tramite evento ALARM</li>
+        <li>Anti-frode: blocco se <code>max_istanze</code> superato</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Payload entitlement JWT (RS256)</h3>
+  <pre><code>{
+  <span class="jk">"sub"</span>:          <span class="js">"LK-A1B2C3D4E5F6"</span>,   <span class="jc">// license_key — identificativo univoco</span>
+  <span class="jk">"iss"</span>:          <span class="js">"bk-shield"</span>,
+  <span class="jk">"iat"</span>:          <span class="jn">1749340800</span>,           <span class="jc">// emesso il</span>
+  <span class="jk">"exp"</span>:          <span class="jn">1752019200</span>,           <span class="jc">// = expires_at licenza</span>
+  <span class="jk">"product_key"</span>:  <span class="js">"PROD-XXXX"</span>,
+  <span class="jk">"license_type"</span>: <span class="js">"trial"</span>,             <span class="jc">// trial | subscription</span>
+  <span class="jk">"modules"</span>:      [<span class="js">"modulo_a"</span>, <span class="js">"modulo_b"</span>],
+  <span class="jk">"max_instances"</span>: <span class="jn">2</span>                   <span class="jc">// solo post-acquisto</span>
+}</code></pre>
+  <p>Il JWT è firmato con la <strong>chiave privata RSA del Portale</strong>. La libreria ha la chiave pubblica embedded nel binario e verifica offline senza contattare il Portale.</p>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     4. ENDPOINT CLIENT
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <h2>Endpoint lato CLIENT</h2>
+  </div>
+
+  <p>Tutte le chiamate sono effettuate dalla <strong>Libreria Client</strong> (nel server della Software House) verso il Portale.
+  Dopo la registrazione, ogni chiamata include l'header <code>Authorization: Bearer &lt;license_key&gt;</code>.</p>
+
+  <h3>Riepilogo endpoint</h3>
+  <table>
+    <thead>
+      <tr><th>Metodo</th><th>Endpoint</th><th>Scopo</th><th>Fase</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="method-badge post">POST</span></td>
+        <td><code>/api/v1/client/register</code></td>
+        <td>Registra la Software House, attiva la licenza trial o verifica INSTALL_KEY, emette license_key ed entitlement firmato</td>
+        <td>Trial + Post-acquisto</td>
+      </tr>
+      <tr>
+        <td><span class="method-badge post">POST</span></td>
+        <td><code>/api/v1/client/register/verify</code></td>
+        <td>Verifica il codice OTP ricevuto via email (solo prima istanza post-acquisto)</td>
+        <td>Post-acquisto</td>
+      </tr>
+      <tr>
+        <td><span class="method-badge get">GET</span></td>
+        <td><code>/api/v1/client/license/status</code></td>
+        <td>Stato corrente della licenza, giorni rimanenti, messaggi in-app da mostrare</td>
+        <td>Entrambe</td>
+      </tr>
+      <tr>
+        <td><span class="method-badge post">POST</span></td>
+        <td><code>/api/v1/client/heartbeat</code></td>
+        <td>Telemetria periodica; aggiorna ultimo_heartbeat; anti-clonazione via session_id</td>
+        <td>Entrambe</td>
+      </tr>
+      <tr>
+        <td><span class="method-badge post">POST</span></td>
+        <td><code>/api/v1/client/license/refresh</code></td>
+        <td>Rinnova l'entitlement firmato a scadenza breve per garantire l'uso offline aggiornato</td>
+        <td>Entrambe</td>
+      </tr>
+      <tr>
+        <td><span class="method-badge post">POST</span></td>
+        <td><code>/api/v1/client/license/renew-request</code></td>
+        <td>Registra l'intenzione di rinnovo. L'attivazione vera arriva poi dall'incasso lato ERP BK tramite ALARM</td>
+        <td>Post-acquisto</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- C1 REGISTER -->
+  <h3>C1 — Registrazione</h3>
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge post">POST</span>
+      <span>/api/v1/client/register</span>
+    </div>
+    <div class="ep-body">
+      <p>Primo endpoint chiamato dalla libreria all'avvio del server. Registra la Software House e attiva la licenza (trial o post-acquisto) in un unico passo. Restituisce <code>license_key</code> ed <code>entitlement_jwt</code> che la libreria salva in cache.</p>
+      <h4>Request body</h4>
+      <pre><code>{
+  <span class="jk">"product_key"</span>:   <span class="js">"string"</span>,  <span class="jc">// chiave prodotto inclusa nella libreria</span>
+  <span class="jk">"vat_number"</span>:    <span class="js">"string"</span>,  <span class="jc">// P.IVA o VAT number (formato libero)</span>
+  <span class="jk">"country"</span>:       <span class="js">"IT"</span>,      <span class="jc">// codice paese ISO 3166-1 alpha-2</span>
+  <span class="jk">"company_name"</span>:  <span class="js">"string"</span>,  <span class="jc">// ragione sociale</span>
+  <span class="jk">"contact_email"</span>: <span class="js">"string"</span>,  <span class="jc">// email per notifiche e OTP</span>
+  <span class="jk">"contact_phone"</span>: <span class="js">"string"</span>,  <span class="jc">// opzionale</span>
+  <span class="jk">"referent_name"</span>: <span class="js">"string"</span>,  <span class="jc">// opzionale</span>
+
+  <span class="jc">// Solo fase post-acquisto (se assenti → flusso trial)</span>
+  <span class="jk">"install_key"</span>:   <span class="js">"string"</span>,  <span class="jc">// chiave pre-condivisa da BK al momento del contratto</span>
+  <span class="jk">"fingerprint"</span>:   <span class="js">"string"</span>   <span class="jc">// hash(install_key + hostname)</span>
+}</code></pre>
+      <h4>Risposte principali</h4>
+      <div class="resp-row">
+        <span class="sbadge s201">201</span>
+        <div class="resp-desc"><strong>trial_activated</strong> — Prima registrazione. Restituisce <code>license_key</code>, <code>entitlement_jwt</code>, <code>expires_at</code>, <code>modules[]</code></div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s200">200</span>
+        <div class="resp-desc"><strong>already_registered</strong> — Già registrata, licenza valida. Risposta idempotente con dati aggiornati</div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s202">202</span>
+        <div class="resp-desc"><strong>otp_sent</strong> — (Solo post-acquisto) Prima istanza sconosciuta: OTP inviato via email, restituisce <code>pending_token</code></div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s409">409</span>
+        <div class="resp-desc"><strong>trial_already_used</strong> — Trial già scaduta o revocata per questa P.IVA + paese + prodotto</div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s403">403</span>
+        <div class="resp-desc"><strong>max_instances_reached</strong> — Nuova istanza sconosciuta ma limite contrattuale già raggiunto</div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s404">404</span>
+        <div class="resp-desc"><strong>product_key_not_found</strong> — Chiave prodotto inesistente o disattivata</div>
+      </div>
+      <div class="resp-row">
+        <span class="sbadge s422">422</span>
+        <div class="resp-desc"><strong>invalid_data</strong> — Campi obbligatori mancanti o formato non valido</div>
+      </div>
+      <div class="note" style="margin-top:10px">
+        <strong>Dettaglio completo C1:</strong> request/response body, diagrammi di sequenza, tabella errori completa →
+        vedere <code>Endpoint_C1_Registrazione.html</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- C2 STATUS -->
+  <h3>C2 — Stato licenza</h3>
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge get">GET</span>
+      <span>/api/v1/client/license/status</span>
+    </div>
+    <div class="ep-body">
+      <p>La libreria interroga periodicamente questo endpoint per ottenere lo stato aggiornato della licenza e i messaggi in-app da mostrare all'utente finale (es. avvisi di scadenza).</p>
+      <h4>Response 200</h4>
+      <pre><code>{
+  <span class="jk">"status"</span>:           <span class="js">"ACTIVE"</span>,       <span class="jc">// TRIAL | ACTIVE | SUSPENDED | EXPIRED</span>
+  <span class="jk">"license_type"</span>:     <span class="js">"subscription"</span>,
+  <span class="jk">"expires_at"</span>:       <span class="js">"2027-06-08T23:59:59Z"</span>,
+  <span class="jk">"days_remaining"</span>:   <span class="jn">365</span>,
+  <span class="jk">"modules"</span>:          [<span class="js">"modulo_a"</span>, <span class="js">"modulo_b"</span>, <span class="js">"modulo_c"</span>],
+  <span class="jk">"entitlement_jwt"</span>:  <span class="js">"eyJ..."</span>,      <span class="jc">// entitlement aggiornato da salvare in cache</span>
+  <span class="jk">"messages"</span>: [
+    { <span class="jk">"type"</span>: <span class="js">"info"</span>, <span class="jk">"text"</span>: <span class="js">"Licenza attiva fino al 08/06/2027"</span> }
+  ]
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- C3 HEARTBEAT -->
+  <h3>C3 — Heartbeat</h3>
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge post">POST</span>
+      <span>/api/v1/client/heartbeat</span>
+    </div>
+    <div class="ep-body">
+      <p>Chiamata periodica della libreria (es. ogni 30 minuti). Aggiorna <code>ultimo_heartbeat</code> sul dispositivo/istanza nel DB. Il Portale usa i dati per rilevare istanze non autorizzate (anti-frode via <code>session_id</code>).</p>
+      <h4>Request body</h4>
+      <pre><code>{
+  <span class="jk">"session_id"</span>:   <span class="js">"uuid-generato-all-avvio"</span>,  <span class="jc">// ID runtime univoco per questa esecuzione</span>
+  <span class="jk">"fingerprint"</span>:  <span class="js">"string"</span>,                    <span class="jc">// hash(install_key + hostname)</span>
+  <span class="jk">"timestamp"</span>:    <span class="js">"2026-06-08T10:00:00Z"</span>
+}</code></pre>
+      <h4>Response 200</h4>
+      <pre><code>{
+  <span class="jk">"ack"</span>: <span class="js">true</span>,
+  <span class="jk">"entitlement_jwt"</span>: <span class="js">"eyJ..."</span>   <span class="jc">// eventuale entitlement aggiornato (es. dopo PAGAMENTO_CONFERMATO)</span>
+}</code></pre>
+      <div class="note">
+        <strong>Anti-frode:</strong> se lo stesso <code>fingerprint</code> invia heartbeat con <code>session_id</code> diversi contemporaneamente,
+        il Portale rileva una potenziale clonazione e segnala l'anomalia (Workflow E).
+      </div>
+    </div>
+  </div>
+
+  <!-- C4 REFRESH -->
+  <h3>C4 — Refresh entitlement</h3>
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge post">POST</span>
+      <span>/api/v1/client/license/refresh</span>
+    </div>
+    <div class="ep-body">
+      <p>Rinnova il documento JWT firmato prima che scada la finestra di grazia offline. Chiamato proattivamente dalla libreria quando l'entitlement in cache è prossimo alla scadenza e il server ha connettività.</p>
+      <h4>Response 200</h4>
+      <pre><code>{
+  <span class="jk">"entitlement_jwt"</span>: <span class="js">"eyJ..."</span>,    <span class="jc">// nuovo JWT con nuova exp</span>
+  <span class="jk">"expires_at"</span>:      <span class="js">"2026-06-15T23:59:59Z"</span>
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- C5 RENEW-REQUEST -->
+  <h3>C5 — Richiesta rinnovo</h3>
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge post">POST</span>
+      <span>/api/v1/client/license/renew-request</span>
+    </div>
+    <div class="ep-body">
+      <p>Registra l'intenzione di rinnovo della licenza da parte della Software House. <strong>Non attiva il rinnovo</strong>: l'attivazione effettiva avviene quando il Portale riceve l'evento <code>PAGAMENTO_CONFERMATO</code> dall'ERP BK tramite ALARM.</p>
+      <h4>Response 200</h4>
+      <pre><code>{
+  <span class="jk">"status"</span>:   <span class="js">"renew_request_registered"</span>,
+  <span class="jk">"message"</span>:  <span class="js">"Richiesta registrata. Il rinnovo sarà attivato alla conferma del pagamento."</span>
+}</code></pre>
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     5. ALARM
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <h2>ALARM — Unica chiamata in uscita</h2>
+  </div>
+
+  <p>Il Portale <strong>non riceve push dall'ERP BK</strong>: fa polling periodico (pull).
+  Questa è l'<strong>unica chiamata in uscita</strong> del Portale verso sistemi esterni.
+  L'ERP BK non chiama mai il Portale.</p>
+
+  <div class="endpoint-block">
+    <div class="ep-header">
+      <span class="method-badge get">GET</span>
+      <span>{erp_base_url}/alarm?codice={product_code}</span>
+    </div>
+    <div class="ep-body">
+      <p>Poll periodico configurabile. L'ERP BK restituisce gli eventi pendenti per il prodotto specificato.
+      Il Portale li elabora e conferma con un <code>ack</code> per marcarli come processati.</p>
+      <h4>Response ERP → Portale</h4>
+      <pre><code>{
+  <span class="jk">"eventi"</span>: [
+    {
+      <span class="jk">"id_evento_erp"</span>:  <span class="js">"ERP-20260608-001"</span>,
+      <span class="jk">"tipo_evento"</span>:    <span class="js">"PAGAMENTO_CONFERMATO"</span>,
+      <span class="jk">"payload"</span>: {
+        <span class="jk">"vat_number"</span>:  <span class="js">"IT01234567890"</span>,
+        <span class="jk">"country"</span>:     <span class="js">"IT"</span>,
+        <span class="jk">"product_key"</span>: <span class="js">"PROD-XXXX"</span>,
+        <span class="jk">"importo"</span>:     <span class="jn">1200.00</span>,
+        <span class="jk">"rif_fattura"</span>: <span class="js">"FT-2026-0042"</span>
+      },
+      <span class="jk">"timestamp"</span>: <span class="js">"2026-06-08T09:30:00Z"</span>
+    }
+  ]
+}</code></pre>
+      <h4>Flusso elaborazione</h4>
+      <div class="seq">
+<span class="sl">Portale</span>                        <span class="sl">ERP interno BK</span>
+   │                              │
+   │  GET /alarm?codice=PROD-XXXX │
+   │ <span class="sa">─────────────────────────────></span> │
+   │  { eventi: [...] }           │
+   │ <span class="sa">&lt;─────────────────────────────</span> │
+   │                              │
+   │  Elabora ogni evento         │
+   │  Aggiorna licenze nel DB     │
+   │                              │
+   │  POST /alarm/ack             │
+   │  { id_evento_erp: "..." }    │
+   │ <span class="sa">─────────────────────────────></span> │
+   │  <span class="sok">200 OK</span>                        │
+   │ <span class="sa">&lt;─────────────────────────────</span> │
+      </div>
+    </div>
+  </div>
+
+  <h3>Eventi trasportati dall'ALARM</h3>
+  <div class="event-grid">
+    <div class="event-card">
+      <div class="ev-code">PAGAMENTO_CONFERMATO</div>
+      <div class="ev-type ev-trigger">▶ Trigger attivazione</div>
+      <p>Pagamento ricevuto da BK. Il Portale attiva la licenza: TRIAL → ACTIVE o rinnova la scadenza. Idempotente via <code>rif_erp</code>.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">NEW_CUSTOMER</div>
+      <div class="ev-type ev-info">ℹ Info</div>
+      <p>Nuova Software House registrata nel gestionale BK. Il Portale può pre-creare il record clienti.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">NEW_INVOICE</div>
+      <div class="ev-type ev-info">ℹ Info</div>
+      <p>Nuova fattura emessa. Record fiscale utile per audit e riconciliazione.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">NEW_PRODUCT</div>
+      <div class="ev-type ev-info">ℹ Info</div>
+      <p>Nuovo prodotto aggiunto nel catalogo BK. Il Portale aggiorna la tabella <code>Prodotti</code>.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">CMD_SOSPENDI</div>
+      <div class="ev-type ev-cmd">⚠ Comando</div>
+      <p>Sospende la licenza. La libreria riceverà al prossimo heartbeat/refresh un entitlement con stato SUSPENDED.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">CMD_RIATTIVA</div>
+      <div class="ev-type ev-cmd">⚠ Comando</div>
+      <p>Riattiva una licenza sospesa. Stato → ACTIVE, nuovo entitlement emesso.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">CMD_REVOCA</div>
+      <div class="ev-type ev-cmd">⚠ Comando</div>
+      <p>Revoca definitiva della licenza. Stato → REVOKED. La libreria smette di sbloccare le funzionalità.</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">CMD_PROROGA</div>
+      <div class="ev-type ev-cmd">⚠ Comando</div>
+      <p>Estende la data di scadenza senza un nuovo pagamento (es. grazia commerciale).</p>
+    </div>
+    <div class="event-card">
+      <div class="ev-code">CMD_MODIFICA_LIMITI</div>
+      <div class="ev-type ev-cmd">⚠ Comando</div>
+      <p>Aggiorna <code>max_istanze</code> o moduli abilitati su una licenza attiva.</p>
+    </div>
+  </div>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     6. SICUREZZA
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <h2>Sicurezza</h2>
+  </div>
+
+  <div class="sec-grid">
+    <div class="sec-card">
+      <div class="sc-title">JWT RS256 — Firma asimmetrica</div>
+      <p>Il Portale firma l'entitlement con la <strong>chiave privata RSA</strong>. La libreria verifica con la <strong>chiave pubblica embedded</strong> nel binario. Nessuna chiamata di rete necessaria per la verifica → funziona offline.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sc-title">INSTALL_KEY — Post-acquisto</div>
+      <p>Chiave pre-condivisa generata da BK alla firma del contratto. Inserita nel config del server della Software House. Prova che il server ha il diritto contrattuale di operare. Mai trasmessa in chiaro su rete non sicura.</p>
+    </div>
+    <div class="sec-card">
+      <div class="sc-title">Fingerprint — Identità istanza</div>
+      <p>Solo nel post-acquisto: <code>hash(install_key + hostname)</code>. Identifica ogni istanza server in modo stabile (anche su VM/Docker/cloud). Salvato in <code>Dispositivi</code> e incastonato nell'entitlement firmato.</p>
+    </div>
+  </div>
+
+  <h3>Approccio: firma, non cifratura</h3>
+  <div class="principle">
+    <p>L'entitlement è <strong>firmato ma non cifrato</strong>: il contenuto è leggibile, ma non modificabile senza invalidare la firma.
+    Questo è sufficiente per garantire l'integrità dei diritti dichiarati.</p>
+    <p>La cifratura AES aggiuntiva è in valutazione (domanda aperta per Alvise — vedere <code>Checkpoint_Alvise.md</code> §7).</p>
+  </div>
+
+  <h3>Anti-frode (Workflow E)</h3>
+  <table>
+    <thead><tr><th>Scenario</th><th>Rilevamento</th><th>Azione</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Copia INSTALL_KEY su server non autorizzato</td>
+        <td>Fingerprint sconosciuto + max_istanze raggiunto</td>
+        <td>403 <code>max_instances_reached</code> + email alert al referente</td>
+      </tr>
+      <tr>
+        <td>Stesso server clonato (VM snapshot)</td>
+        <td>Due heartbeat simultanei con stesso fingerprint, <code>session_id</code> diversi</td>
+        <td>Anomalia segnalata, entitlement sospeso in attesa verifica</td>
+      </tr>
+      <tr>
+        <td>INSTALL_KEY revocata</td>
+        <td>Portale riceve <code>CMD_REVOCA</code> dall'ERP BK</td>
+        <td>403 <code>install_key_revoked</code> a tutti i fingerprint associati</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     7. STATI LICENZA
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <h2>Stati della licenza</h2>
+  </div>
+
+  <div class="states">
+    <div>
+      <div class="state-node sn-trial">TRIAL</div>
+      <div class="state-label">30 giorni</div>
+    </div>
+    <div class="state-arrow">→</div>
+    <div>
+      <div class="state-node sn-active">ACTIVE</div>
+      <div class="state-label">Subscription</div>
+    </div>
+    <div class="state-arrow">⇄</div>
+    <div>
+      <div class="state-node sn-susp">SUSPENDED</div>
+      <div class="state-label">Mancato pagamento</div>
+    </div>
+  </div>
+  <div class="states" style="margin-top:8px">
+    <div style="min-width:110px"></div>
+    <div style="width:40px"></div>
+    <div>
+      <div class="state-node sn-active" style="opacity:0.3">ACTIVE</div>
+    </div>
+    <div class="state-arrow">→</div>
+    <div>
+      <div class="state-node sn-exp">EXPIRED</div>
+      <div class="state-label">Scadenza non rinnovata</div>
+    </div>
+  </div>
+
+  <h3>Transizioni</h3>
+  <div class="states-detail">
+    <div class="sd-row">
+      <span class="sd-from">TRIAL → ACTIVE</span>
+      <span>ALARM: <span class="sd-trigger">PAGAMENTO_CONFERMATO</span> — la Software House ha pagato BK</span>
+    </div>
+    <div class="sd-row">
+      <span class="sd-from">ACTIVE → SUSPENDED</span>
+      <span>ALARM: <span class="sd-trigger">CMD_SOSPENDI</span> — mancato pagamento rinnovo o comando manuale BK</span>
+    </div>
+    <div class="sd-row">
+      <span class="sd-from">SUSPENDED → ACTIVE</span>
+      <span>ALARM: <span class="sd-trigger">CMD_RIATTIVA</span> o <span class="sd-trigger">PAGAMENTO_CONFERMATO</span> successivo</span>
+    </div>
+    <div class="sd-row">
+      <span class="sd-from">ACTIVE → EXPIRED</span>
+      <span>Cron job notturno: scadenza superata senza rinnovo confermato</span>
+    </div>
+    <div class="sd-row">
+      <span class="sd-from">ACTIVE → ACTIVE</span>
+      <span>ALARM: <span class="sd-trigger">PAGAMENTO_CONFERMATO</span> rinnovo — aggiorna <code>data_scadenza</code> e firma nuovo entitlement</span>
+    </div>
+    <div class="sd-row">
+      <span class="sd-from">* → REVOKED</span>
+      <span>ALARM: <span class="sd-trigger">CMD_REVOCA</span> — revoca definitiva, nessun rientro possibile</span>
+    </div>
+  </div>
+
+  <h3>Licenza provvisoria</h3>
+  <p>Alla scadenza di una licenza ACTIVE, il Portale può creare automaticamente una <strong>licenza provvisoria</strong>:
+  stessi moduli, durata ~30 giorni, in attesa del pagamento del rinnovo.
+  Se entro 30 giorni non arriva <code>PAGAMENTO_CONFERMATO</code>, la licenza passa a SUSPENDED.
+  <span style="color:#92400E"><strong>(Comportamento esatto da confermare con Alvise — Checkpoint §2 e §6)</strong></span></p>
+
+  <h3>Notifiche di scadenza</h3>
+  <table>
+    <thead><tr><th>Tipo notifica</th><th>Quando</th><th>Canale</th></tr></thead>
+    <tbody>
+      <tr><td><code>SCAD_7GG</code></td><td>7 giorni alla scadenza</td><td>Email a contact_email</td></tr>
+      <tr><td><code>SCAD_3GG</code></td><td>3 giorni alla scadenza</td><td>Email + messaggio in-app (via /status)</td></tr>
+      <tr><td><code>SCAD_1GG</code></td><td>1 giorno alla scadenza</td><td>Email + messaggio in-app urgente</td></tr>
+      <tr><td><code>SCADUTA</code></td><td>Giorno della scadenza</td><td>Email + stato EXPIRED nel DB</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<hr/>
+
+<!-- ══════════════════════════════════════════════════════
+     8. SCHEMA DB
+══════════════════════════════════════════════════════ -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-num">8</div>
+    <h2>Schema Database (SQL Server)</h2>
+  </div>
+
+  <p>File completo: <code>PORTALE_BK/bk_invoice_service_schema.sql</code></p>
+
+  <div class="db-grid">
+    <div class="db-group">
+      <div class="db-group-title">Catalogo</div>
+      <div class="db-table-row"><span class="db-table-name">Prodotti</span><span>Catalogo app con product_key univoca</span></div>
+      <div class="db-table-row"><span class="db-table-name">Moduli</span><span>Funzionalità attivabili per prodotto</span></div>
+    </div>
+    <div class="db-group">
+      <div class="db-group-title">Anagrafica</div>
+      <div class="db-table-row"><span class="db-table-name">Clienti</span><span>Anagrafica Software House (P.IVA, paese, SDI, PEC) — NON utenti finali</span></div>
+    </div>
+    <div class="db-group">
+      <div class="db-group-title">Licenze</div>
+      <div class="db-table-row"><span class="db-table-name">Licenze</span><span>Una riga per coppia cliente+prodotto. Stato, tipo, scadenza</span></div>
+      <div class="db-table-row"><span class="db-table-name">Licenze_Moduli</span><span>N:M — moduli attivi per licenza</span></div>
+    </div>
+    <div class="db-group">
+      <div class="db-group-title">Runtime</div>
+      <div class="db-table-row"><span class="db-table-name">Dispositivi</span><span>Istanze server autorizzate (fingerprint, ultimo_heartbeat, session_id)</span></div>
+      <div class="db-table-row"><span class="db-table-name">Pagamenti</span><span>Storico pagamenti ricevuti da ALARM. Idempotenza via rif_erp</span></div>
+    </div>
+    <div class="db-group">
+      <div class="db-group-title">Comunicazioni</div>
+      <div class="db-table-row"><span class="db-table-name">Notifiche</span><span>Log avvisi scadenza (SCAD_7GG, SCAD_3GG, SCAD_1GG, SCADUTA)</span></div>
+    </div>
+    <div class="db-group">
+      <div class="db-group-title">Convenzioni</div>
+      <div class="db-table-row"><span class="db-table-name">PK</span><span>BIGINT IDENTITY su tutte le tabelle</span></div>
+      <div class="db-table-row"><span class="db-table-name">Testi</span><span>NVARCHAR ovunque (supporto clienti esteri)</span></div>
+      <div class="db-table-row"><span class="db-table-name">Date</span><span>DATETIME2 UTC — SYSUTCDATETIME()</span></div>
+      <div class="db-table-row"><span class="db-table-name">updated_at</span><span>Gestito da trigger su tutte le tabelle principali</span></div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:16px">
+    <strong>Domande aperte per Alvise:</strong> stack tecnologico (Node.js vs Python), approccio multilingua nel DB
+    (tabelle dedicate o tabella generica Traduzioni), validazione P.IVA con servizio esterno, perimetro MVP.
+    Vedere <code>Checkpoint_Alvise.md</code> per la lista completa.
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <span>BK Shield — Portale BK-Service v2.0</span>
+  <span>8 giugno 2026 — Confidenziale BK Solutions</span>
+  <span>Sostituisce: 1-PortaleBK-Service.pdf</span>
+</div>
+
+</div><!-- /page -->
+</body>
+</html>
