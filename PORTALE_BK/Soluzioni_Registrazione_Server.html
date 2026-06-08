@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Certificazione Server — 4 Soluzioni</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; max-width: 960px; margin: 40px auto; color: #222; }
+  h1 { font-size: 20px; border-bottom: 2px solid #333; padding-bottom: 6px; }
+  h2 { font-size: 15px; background: #f0f0f0; padding: 6px 10px; border-left: 4px solid #333; margin-top: 32px; }
+  h2.rec { border-left-color: #2a7; background: #efffef; }
+  h3 { font-size: 13px; color: #444; margin-top: 18px; border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
+  p { margin: 6px 0; line-height: 1.6; }
+  pre { background: #f5f5f5; border: 1px solid #ddd; padding: 10px 14px; font-size: 11px; overflow-x: auto; border-radius: 4px; line-height: 1.5; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 12px; }
+  th { background: #333; color: #fff; padding: 7px 10px; text-align: left; }
+  td { border: 1px solid #ccc; padding: 6px 10px; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafafa; }
+  .pro { color: #2a7; font-weight: bold; }
+  .con { color: #c33; font-weight: bold; }
+  .tag { display: inline-block; background: #333; color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 3px; margin-bottom: 4px; }
+  .tag.rec { background: #2a7; }
+  .tag.ctx { background: #669; }
+  .meta { color: #666; font-size: 12px; margin-bottom: 20px; }
+  .box { background: #fff8e1; border: 1px solid #f0c040; padding: 10px 14px; border-radius: 4px; margin: 12px 0; }
+  .box.green { background: #efffef; border-color: #2a7; }
+  .box.blue { background: #e8f0ff; border-color: #46a; }
+  ul { margin: 4px 0; padding-left: 20px; }
+  li { margin: 3px 0; line-height: 1.5; }
+  ol { margin: 4px 0; padding-left: 20px; }
+  .subopt { background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; padding: 10px 14px; margin: 10px 0; }
+  .subopt strong { display: block; margin-bottom: 4px; color: #333; }
+  .errortable td:first-child { font-family: monospace; font-size: 11px; }
+  .section-divider { border: none; border-top: 2px solid #eee; margin: 30px 0; }
+  @media print {
+    body { margin: 15px; font-size: 12px; }
+    h2 { page-break-inside: avoid; }
+    pre { font-size: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Certificazione Server — 4 Soluzioni a Confronto</h1>
+<p class="meta">
+  <strong>Progetto:</strong> BK Invoice Service &nbsp;|&nbsp;
+  <strong>Data:</strong> 8 giugno 2026 &nbsp;|&nbsp;
+  <strong>Argomento:</strong> Come certifichiamo il server del Fornitore alla registrazione?
+</p>
+
+<div class="box">
+  <strong>Contesto:</strong> La libreria BK è installata sul <strong>server del Fornitore</strong> (la software house cliente di BK),
+  non sul dispositivo dell'utente finale. Esistono due momenti distinti in cui avviene la registrazione:
+  <ul>
+    <li><strong>Trial</strong> — il Fornitore è sconosciuto, nessun contratto, nessuna chiave pre-condivisa</li>
+    <li><strong>Post-acquisto</strong> — il contratto esiste, BK conosce già il Fornitore</li>
+  </ul>
+  Le soluzioni 1 e 3 coprono questi due scenari diversi. I tre rischi da coprire in entrambi:
+  <ul>
+    <li>✅ Server legittimo del Fornitore</li>
+    <li>❌ Server di qualcuno che ha rubato le credenziali</li>
+    <li>❌ Server aggiuntivo oltre il limite di istanze acquistate</li>
+  </ul>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ SOLUZIONE 1 -->
+<h2><span class="tag">Soluzione 1</span> &nbsp;Email + Codice OTP &nbsp;<span class="tag ctx">Scenario: TRIAL</span></h2>
+
+<p>Il Fornitore non ha ancora firmato nulla con BK. Vuole provare il prodotto gratuitamente per 30 giorni.
+Non esiste nessuna chiave pre-condivisa: l'OTP via email è l'<strong>unica verifica di identità possibile</strong>.</p>
+
+<h3>Da dove prendiamo l'email per mandare l'OTP?</h3>
+<p>Il Fornitore è sconosciuto al Portale. Tre sotto-opzioni:</p>
+
+<div class="subopt">
+  <strong>1a — Il Fornitore include l'email nella chiamata di registrazione (più semplice)</strong>
+  <pre>POST /client/register
+{
+  "p_iva":           "12345678901",
+  "ragione_sociale": "ABC SRL",
+  "email":           "admin@abcsrl.it",   ← fornita dal Fornitore
+  "product_key":     "BK-INV-001",
+  "fingerprint":     "a3f7c2d1..."
+}</pre>
+  Il Portale manda l'OTP a quell'email. Semplice, ma il Fornitore potrebbe inserire un'email non sua.
+</div>
+
+<div class="subopt">
+  <strong>1b — L'email viene ricavata dalla validazione P.IVA (servizio esterno)</strong>
+  Se il servizio di validazione (es. VeriFactura) restituisce anche i contatti ufficiali dell'azienda,
+  usiamo quell'email. Più sicuro, ma dipende da cosa il servizio espone — da chiedere ad Alvise.
+</div>
+
+<div class="subopt">
+  <strong>1c — Il Fornitore si registra prima sul portale web BK, poi installa la libreria</strong>
+  <pre>Portale web BK:
+  [Form registrazione trial] → Fornitore inserisce P.IVA, email, ragione sociale
+  → Verifica email → Account creato → BK genera TRIAL_KEY
+  → Fornitore riceve TRIAL_KEY via email
+
+Libreria sul server:
+  POST /client/register { p_iva, product_key, fingerprint, trial_key }
+  ← 200 OK + registration_token  (nessun OTP aggiuntivo)</pre>
+  La verifica umana avviene una sola volta sul web, poi il server funziona in autonomia.
+  È il modello usato da Stripe, Twilio, SendGrid: prima crei l'account, poi usi la chiave.
+</div>
+
+<h3>Flusso completo (opzione 1a)</h3>
+<pre>
+[Server Fornitore]                      [Portale BK]                [Email Fornitore]
+       |                                      |                            |
+       | POST /client/register                |                            |
+       | { p_iva, ragione_sociale,            |                            |
+       |   email, product_key, fingerprint }  |                            |
+       |─────────────────────────────────────>|                            |
+       |                                      | 1. Valida formato P.IVA    |
+       |                                      | 2. Verifica P.IVA esiste   |
+       |                                      |    (servizio esterno)      |
+       |                                      | 3. Trial già attiva        |
+       |                                      |    per questa P.IVA?       |
+       |                                      | 4. Genera OTP (6 cifre)    |
+       |                                      | 5. Salva in                |
+       |                                      |    RegistrazioniPending    |
+       |                                      |───────────────────────────>|
+       |                                      |          "Codice: 482931   |
+       |                                      |           Scade in 15 min" |
+       | 202 Accepted                         |                            |
+       | { pending_token: "abc...",           |                            |
+       |   expires_in: 900 }                  |                            |
+       |<─────────────────────────────────────|                            |
+       |                                      |                            |
+       |   [Admin Fornitore legge l'email     |                            |
+       |    e comunica il codice alla         |                            |
+       |    libreria tramite variabile        |                            |
+       |    d'ambiente o config]              |                            |
+       |                                      |                            |
+       | POST /client/register/verify         |                            |
+       | { pending_token: "abc...",           |                            |
+       |   otp: "482931" }                    |                            |
+       |─────────────────────────────────────>|                            |
+       |                                      | 1. OTP non scaduto? ✓      |
+       |                                      | 2. OTP corretto? ✓         |
+       |                                      | 3. Crea Cliente nel DB     |
+       |                                      | 4. Crea Licenza TRIAL      |
+       |                                      |    (30 giorni)             |
+       |                                      | 5. Registra istanza server |
+       |                                      | 6. Firma entitlement       |
+       |                                      |    (JWT RS256)             |
+       |                                      | 7. Elimina pending record  |
+       | 200 OK                               |                            |
+       | { registration_token,                |                            |
+       |   entitlement,                       |                            |
+       |   data_scadenza: "2026-07-08",       |                            |
+       |   moduli: ["FATT","MAGA","REPO"] }   |                            |
+       |<─────────────────────────────────────|                            |
+       |                                      |                            |
+       | [Libreria salva entitlement          |                            |
+       |  in cache, sblocca funzioni trial]   |                            |
+</pre>
+
+<h3>Casi di errore</h3>
+<table class="errortable">
+  <tr><th>Situazione</th><th>Risposta</th></tr>
+  <tr><td>P.IVA formato non valido</td><td><code>400</code> — PIVA_FORMAT_INVALID</td></tr>
+  <tr><td>P.IVA non esiste (servizio esterno)</td><td><code>400</code> — PIVA_NOT_FOUND</td></tr>
+  <tr><td>product_key non esiste</td><td><code>400</code> — PRODUCT_KEY_NOT_FOUND</td></tr>
+  <tr><td>Trial già attiva per questa P.IVA</td><td><code>409</code> — TRIAL_ALREADY_EXISTS (restituisce entitlement esistente)</td></tr>
+  <tr><td>OTP scaduto (oltre 15 min)</td><td><code>410</code> — OTP_EXPIRED</td></tr>
+  <tr><td>OTP errato (max 3 tentativi)</td><td><code>400</code> — OTP_INVALID</td></tr>
+  <tr><td>Troppi tentativi OTP</td><td><code>429</code> — TOO_MANY_ATTEMPTS (blocco 30 min)</td></tr>
+</table>
+
+<table>
+  <tr><th>Vantaggi</th><th>Svantaggi</th></tr>
+  <tr>
+    <td>
+      <span class="pro">✅</span> Verifica umana garantita<br>
+      <span class="pro">✅</span> Nessun segreto da consegnare in anticipo<br>
+      <span class="pro">✅</span> Standard riconosciuto (usato da molti SaaS)
+    </td>
+    <td>
+      <span class="con">❌</span> Richiede intervento dell'admin alla prima attivazione<br>
+      <span class="con">❌</span> Blocca deploy automatici e CI/CD<br>
+      <span class="con">❌</span> Dipende dalla disponibilità del servizio email
+    </td>
+  </tr>
+</table>
+<p><strong>Adatta per:</strong> Scenario TRIAL — Fornitore sconosciuto, nessun contratto preesistente.</p>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════ SOLUZIONE 2 -->
+<h2><span class="tag">Soluzione 2</span> &nbsp;INSTALL_KEY pre-condivisa &nbsp;<span class="tag ctx">Scenario: POST-ACQUISTO</span></h2>
+
+<p>Il Fornitore ha già firmato il contratto con BK. BK genera una chiave univoca e la consegna al Fornitore.
+Il server si registra automaticamente senza alcun intervento umano.</p>
+
+<pre>
+[Alla firma del contratto]
+BK genera INSTALL_KEY univoca → consegnata al Fornitore via portale/email sicura
+Fornitore configura il server: INSTALL_KEY=BK-a3f7-c2d1-e9b4-xxxx
+
+[Ad ogni avvio del server]
+Server → POST /register { p_iva, product_key, fingerprint, install_key }
+       ← 200 OK + registration_token  (nessuna interazione umana)
+</pre>
+
+<table>
+  <tr><th>Vantaggi</th><th>Svantaggi</th></tr>
+  <tr>
+    <td>
+      <span class="pro">✅</span> Completamente automatico, supporta CI/CD<br>
+      <span class="pro">✅</span> Nessun intervento umano necessario<br>
+      <span class="pro">✅</span> Standard enterprise (come le API key)
+    </td>
+    <td>
+      <span class="con">❌</span> Se la chiave viene rubata, chiunque può usarla<br>
+      <span class="con">❌</span> Nessuna verifica che il server appartenga davvero al Fornitore<br>
+      <span class="con">❌</span> Richiede processo sicuro di consegna iniziale
+    </td>
+  </tr>
+</table>
+<p><strong>Adatta per:</strong> Fornitori con infrastrutture automatizzate e deploy frequenti.</p>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════ SOLUZIONE 3 -->
+<h2 class="rec"><span class="tag rec">Soluzione 3 ⭐ Consigliata</span> &nbsp;INSTALL_KEY + OTP solo alla prima istanza &nbsp;<span class="tag ctx">Scenario: POST-ACQUISTO</span></h2>
+
+<p>Il Fornitore ha già firmato il contratto con BK. BK conosce la sua P.IVA, email e quante istanze
+ha acquistato. La verifica via OTP avviene <strong>una sola volta per ogni nuova istanza server</strong>;
+i riavvii successivi sono completamente automatici.</p>
+
+<div class="box green">
+  <strong>Nota importante:</strong> questa soluzione si applica <strong>dopo la trial</strong> (o per acquisti diretti senza trial).
+  Per la prima registrazione di un Fornitore sconosciuto si usa la Soluzione 1.
+</div>
+
+<h3>Prima registrazione di una nuova istanza server</h3>
+<pre>
+[Server Fornitore]                      [Portale BK]                [Email Fornitore]
+       |                                      |                            |
+       | POST /client/register                |                            |
+       | { p_iva, product_key,               |                            |
+       |   fingerprint, install_key }        |                            |
+       |─────────────────────────────────────>|                            |
+       |                                      | 1. install_key esiste? ✓   |
+       |                                      | 2. install_key corrisponde |
+       |                                      |    a p_iva e product? ✓    |
+       |                                      | 3. Conta istanze attive:   |
+       |                                      |    entro max_istanze? ✓    |
+       |                                      | 4. fingerprint nel DB? NO  |
+       |                                      |    → nuova istanza         |
+       |                                      | 5. Genera OTP              |
+       |                                      |───────────────────────────>|
+       |                                      |    "Nuovo server rilevato  |
+       |                                      |     Codice attivazione:    |
+       |                                      |     719823"                |
+       | 202 Accepted                         |                            |
+       | { pending_token, expires_in: 900 }   |                            |
+       |<─────────────────────────────────────|                            |
+       |                                      |                            |
+       | POST /client/register/verify         |                            |
+       | { pending_token, otp: "719823" }     |                            |
+       |─────────────────────────────────────>|                            |
+       |                                      | 1. OTP corretto ✓          |
+       |                                      | 2. Registra nuova istanza  |
+       |                                      |    in Dispositivi          |
+       |                                      | 3. Genera registration_    |
+       |                                      |    token                   |
+       | 200 OK { registration_token }        |                            |
+       |<─────────────────────────────────────|                            |
+</pre>
+
+<h3>Avvii successivi dello stesso server (fingerprint già registrato)</h3>
+<pre>
+[Server Fornitore]                      [Portale BK]
+       |                                      |
+       | POST /client/register                |
+       | { p_iva, product_key,               |
+       |   fingerprint, install_key }        |
+       |─────────────────────────────────────>|
+       |                                      | 1. install_key valida ✓
+       |                                      | 2. fingerprint nel DB → SÌ
+       |                                      | 3. Licenza attiva → SÌ
+       |                                      | 4. Genera registration_token
+       | 200 OK { registration_token }        |    (immediato, nessun OTP)
+       |<─────────────────────────────────────|
+</pre>
+
+<h3>Tentativo di superare il limite di istanze</h3>
+<pre>
+[Server non autorizzato]                [Portale BK]                [Email Fornitore legittimo]
+       |                                      |                            |
+       | POST /client/register                |                            |
+       | { ..., install_key }                |                            |
+       |─────────────────────────────────────>|                            |
+       |                                      | Istanze attive: 3          |
+       |                                      | max_istanze contratto: 3   |
+       |                                      | → LIMITE SUPERATO          |
+       |                                      |───────────────────────────>|
+       |                                      |   "⚠️ Tentativo di          |
+       |                                      |    registrazione non       |
+       |                                      |    autorizzata rilevato"   |
+       | 403 Forbidden                        |                            |
+       | { error: "MAX_INSTANCES_REACHED" }   |                            |
+       |<─────────────────────────────────────|                            |
+</pre>
+
+<h3>Casi di errore aggiuntivi rispetto alla Soluzione 1</h3>
+<table class="errortable">
+  <tr><th>Situazione</th><th>Risposta</th></tr>
+  <tr><td>INSTALL_KEY non esiste nel DB</td><td><code>401</code> — INSTALL_KEY_INVALID</td></tr>
+  <tr><td>INSTALL_KEY non corrisponde alla P.IVA</td><td><code>401</code> — INSTALL_KEY_MISMATCH</td></tr>
+  <tr><td>INSTALL_KEY revocata (contratto scaduto)</td><td><code>403</code> — INSTALL_KEY_REVOKED</td></tr>
+  <tr><td>Limite istanze raggiunto</td><td><code>403</code> — MAX_INSTANCES_REACHED</td></tr>
+  <tr><td>Licenza sospesa (mancato pagamento)</td><td><code>403</code> — LICENSE_SUSPENDED</td></tr>
+</table>
+
+<table>
+  <tr><th>Vantaggi</th><th>Svantaggi</th></tr>
+  <tr>
+    <td>
+      <span class="pro">✅</span> OTP solo una volta per nuova istanza<br>
+      <span class="pro">✅</span> Deploy automatici dopo la prima attivazione<br>
+      <span class="pro">✅</span> Doppio controllo: INSTALL_KEY + conferma email<br>
+      <span class="pro">✅</span> Bilanciamento ottimale sicurezza / automazione<br>
+      <span class="pro">✅</span> Alert automatico al Fornitore su istanze non autorizzate
+    </td>
+    <td>
+      <span class="con">❌</span> Leggermente più complessa da implementare<br>
+      <span class="con">❌</span> Richiede gestione sicura della INSTALL_KEY
+    </td>
+  </tr>
+</table>
+<p><strong>Adatta per:</strong> Scenario post-acquisto — contratto firmato, licenza enterprise attiva.</p>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════ SOLUZIONE 4 -->
+<h2><span class="tag">Soluzione 4</span> &nbsp;Link email &nbsp;<span class="tag ctx">Variante della Soluzione 1</span></h2>
+
+<p>Anziché un codice OTP numerico, l'email contiene un <strong>link cliccabile</strong>. L'admin apre il link nel
+browser e la registrazione si sblocca. Il server fa polling per sapere quando il link è stato cliccato.</p>
+
+<pre>
+Server → POST /register { p_iva, product_key, fingerprint }
+       ← 202 Accepted + pending_token
+       → Email: "Clicca qui per attivare: https://portale.bk/activate?token=eyJ..."
+Admin  → Clicca il link nel browser → Pagina di conferma BK
+Server → GET /register/status?pending_token=...  (ogni 5 sec)
+       ← 200 OK + registration_token  (dopo che il link è stato cliccato)
+</pre>
+
+<table>
+  <tr><th>Vantaggi</th><th>Svantaggi</th></tr>
+  <tr>
+    <td>
+      <span class="pro">✅</span> Più semplice per l'admin (un clic, nessun codice)<br>
+      <span class="pro">✅</span> Link con scadenza automatica (es. 15 minuti)<br>
+      <span class="pro">✅</span> Nessun rischio di errore di trascrizione
+    </td>
+    <td>
+      <span class="con">❌</span> Richiede accesso a un browser da parte dell'admin<br>
+      <span class="con">❌</span> Non funziona in ambienti headless o intranet isolata<br>
+      <span class="con">❌</span> Il server deve fare polling per sapere quando confermato
+    </td>
+  </tr>
+</table>
+<p><strong>Adatta per:</strong> Fornitori con admin non tecnici che preferiscono un'interfaccia web.</p>
+
+<hr class="section-divider">
+
+<!-- ═══════════════════════════════════════════════════════ COMPARATIVA -->
+<h2>Tabella comparativa</h2>
+<table>
+  <tr>
+    <th>Criterio</th>
+    <th style="text-align:center">Sol. 1<br>OTP<br><small>(Trial)</small></th>
+    <th style="text-align:center">Sol. 2<br>INSTALL_KEY<br><small>(Post-acquisto)</small></th>
+    <th style="text-align:center;background:#2a7">Sol. 3 ⭐<br>Combinata<br><small>(Post-acquisto)</small></th>
+    <th style="text-align:center">Sol. 4<br>Link<br><small>(Trial)</small></th>
+  </tr>
+  <tr><td>Scenario principale</td><td style="text-align:center">Trial</td><td style="text-align:center">Post-acquisto</td><td style="text-align:center">Post-acquisto</td><td style="text-align:center">Trial</td></tr>
+  <tr><td>Verifica umana</td><td style="text-align:center">✅ Sempre</td><td style="text-align:center">❌ Mai</td><td style="text-align:center">✅ Prima istanza</td><td style="text-align:center">✅ Sempre</td></tr>
+  <tr><td>Deploy automatico</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">✅ Dopo prima volta</td><td style="text-align:center">❌</td></tr>
+  <tr><td>Sicurezza</td><td style="text-align:center">Alta</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td><td style="text-align:center">Alta</td></tr>
+  <tr><td>Semplicità per l'admin</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td></tr>
+  <tr><td>Supporto CI/CD</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">✅</td><td style="text-align:center">❌</td></tr>
+  <tr><td>Alert istanze non autorizzate</td><td style="text-align:center">—</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">—</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════ SCHEMA -->
+<h2>Schema: quale soluzione per quale momento</h2>
+<table>
+  <tr><th>Momento</th><th>Soluzione</th><th>Motivo</th></tr>
+  <tr><td><strong>Trial</strong> — Fornitore sconosciuto</td><td>Soluzione 1</td><td>Nessuna chiave pre-condivisa, OTP è l'unica verifica</td></tr>
+  <tr><td><strong>Post-acquisto</strong> — Prima istanza</td><td>Soluzione 3</td><td>INSTALL_KEY garantisce il contratto, OTP conferma il server</td></tr>
+  <tr><td><strong>Post-acquisto</strong> — Riavvio stesso server</td><td>Soluzione 3 automatica</td><td>Fingerprint già nel DB, nessuna interazione</td></tr>
+  <tr><td><strong>Post-acquisto</strong> — Nuova istanza aggiuntiva</td><td>Soluzione 3 con OTP</td><td>Nuovo fingerprint → verifica umana una tantum</td></tr>
+  <tr><td><strong>Istanza non autorizzata</strong></td><td>Blocco + alert email</td><td>max_istanze superato → notifica al Fornitore legittimo</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════ DOMANDE -->
+<h2>Domande per Alvise</h2>
+<ol>
+  <li>Il Fornitore usa CI/CD e deploy automatici? → Se sì, Soluzione 2 o 3 è obbligatoria</li>
+  <li>Per la trial: il Fornitore include l'email nella chiamata (opzione 1a) o si registra prima sul portale web (opzione 1c)?</li>
+  <li>Preferiamo OTP numerico (Sol. 1 e 3) o link email (Sol. 4)?</li>
+  <li>La INSTALL_KEY viene generata manualmente da un operatore BK o automaticamente alla firma del contratto?</li>
+  <li>In caso di istanza non autorizzata: blocchiamo subito o mandiamo prima un alert al Fornitore?</li>
+</ol>
+
+</body>
+</html>
