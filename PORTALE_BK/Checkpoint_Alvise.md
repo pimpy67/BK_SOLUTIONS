@@ -146,6 +146,39 @@ Sono due approcci diversi:
 
 ---
 
+---
+
+## 9. Modello Enterprise — Libreria installata sul server del Fornitore
+
+**Contesto:** Hai confermato che la licenza è di tipo enterprise e che la libreria viene installata sul **server del Fornitore** (la software house che integra BK nel suo prodotto), non sul dispositivo dell'utente finale. Questo cambia alcune assunzioni del progetto.
+
+**Impatti già analizzati dal team:**
+
+| Componente | Prima (assunto) | Ora (corretto) |
+|-----------|----------------|----------------|
+| Fingerprint | Hardware PC/telefono (CPU, MAC) | Identità del server del Fornitore |
+| `max_dispositivi` | Dispositivi utente | Istanze server (prod, staging, dev...) |
+| `Clienti` nel DB | Utente finale | Software house che acquista la licenza |
+| Registrazione | Al primo avvio app utente | All'avvio del server applicativo del Fornitore |
+| Offline | Utente senza connessione | Server in manutenzione / intranet isolata |
+| Anti-frode | Clonazione su molti PC | Copia INSTALL_KEY su server non autorizzati |
+
+**Proposta team sul fingerprint:**
+Anziché hardware (instabile su VM/Docker/cloud), usiamo una **INSTALL_KEY** generata da BK al momento della vendita:
+```
+fingerprint = hash(INSTALL_KEY + hostname_server)
+```
+La INSTALL_KEY viene consegnata al Fornitore e inserita nel file di configurazione del suo server.
+
+**Domande:**
+- **INSTALL_KEY** — la genera BK manualmente (es. via pannello admin) o automaticamente alla firma del contratto?
+- **max_istanze** — come viene definito contrattualmente? (es. 1 prod + 1 staging = 2 istanze incluse?)
+- **Ambienti isolati** — ci sono Fornitori che operano in intranet senza accesso internet? Se sì, quanto deve durare la cache offline prima di bloccare?
+- **Trial enterprise** — il Fornitore può installare la trial sul suo server di test prima di acquistare? Ha senso avere una trial in questo contesto?
+- **Utenti finali** — gli utenti finali dell'applicazione del Fornitore sono completamente fuori dal nostro sistema, corretto? Noi tracciamo solo il Fornitore.
+
+---
+
 ## Note finali
 
 Portiamo anche un elenco di **micro-domande** emerse dall'analisi dello schema SQL che potrebbero impattare il DB:
@@ -153,3 +186,4 @@ Portiamo anche un elenco di **micro-domande** emerse dall'analisi dello schema S
 - La tabella `Notifiche` ha solo i tipi `SCAD_7GG`, `SCAD_3GG`, `SCAD_1GG`, `SCADUTA` — aggiungiamo un tipo per la licenza provvisoria in scadenza?
 - `Pagamenti.rif_erp` è nullable (ammette più NULL) — confermato come comportamento atteso?
 - La tabella `Dispositivi` non ha storico heartbeat, solo `ultimo_heartbeat` — confermato che non serve lo storico?
+- `Dispositivi.device_id` — in ottica enterprise server, lo rinominiamo `instance_id` o teniamo il nome generico?
