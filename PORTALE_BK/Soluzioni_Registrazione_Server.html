@@ -119,19 +119,28 @@ Libreria sul server:
   È il modello usato da Stripe, Twilio, SendGrid: prima crei l'account, poi usi la chiave.
 </div>
 
+<div class="box green">
+  <strong>Semplificazione:</strong> nella TRIAL non serve il fingerprint. La P.IVA è già univoca per azienda —
+  basta verificare che non esista già una trial per quella P.IVA + product_key.
+  Il fingerprint entra in gioco solo nel post-acquisto, per contare le istanze server.
+</div>
+
 <h3>Flusso completo (opzione 1a)</h3>
 <pre>
-[Server Fornitore]                      [Portale BK]                [Email Fornitore]
+[Server Software House]                 [Portale BK]                [Email Software House]
        |                                      |                            |
        | POST /client/register                |                            |
        | { p_iva, ragione_sociale,            |                            |
-       |   email, product_key, fingerprint }  |                            |
+       |   email, product_key }              |                            |
+       | ← niente fingerprint nella trial!   |                            |
        |─────────────────────────────────────>|                            |
        |                                      | 1. Valida formato P.IVA    |
        |                                      | 2. Verifica P.IVA esiste   |
        |                                      |    (servizio esterno)      |
-       |                                      | 3. Trial già attiva        |
-       |                                      |    per questa P.IVA?       |
+       |                                      | 3. Trial già attiva per    |
+       |                                      |    questa P.IVA+product?   |
+       |                                      |    → SÌ: 409 già esistente |
+       |                                      |    → NO: continua          |
        |                                      | 4. Genera OTP (6 cifre)    |
        |                                      | 5. Salva in                |
        |                                      |    RegistrazioniPending    |
@@ -157,10 +166,11 @@ Libreria sul server:
        |                                      | 3. Crea Cliente nel DB     |
        |                                      | 4. Crea Licenza TRIAL      |
        |                                      |    (30 giorni)             |
-       |                                      | 5. Registra istanza server |
-       |                                      | 6. Firma entitlement       |
+       |                                      |    — nessun Dispositivo    |
+       |                                      |    registrato (no fingerp.)|
+       |                                      | 5. Firma entitlement       |
        |                                      |    (JWT RS256)             |
-       |                                      | 7. Elimina pending record  |
+       |                                      | 6. Elimina pending record  |
        | 200 OK                               |                            |
        | { registration_token,                |                            |
        |   entitlement,                       |                            |
@@ -248,6 +258,16 @@ i riavvii successivi sono completamente automatici.</p>
 <div class="box green">
   <strong>Nota importante:</strong> questa soluzione si applica <strong>dopo la trial</strong> (o per acquisti diretti senza trial).
   Per la prima registrazione di una Software House sconosciuta si usa la Soluzione 1.
+</div>
+<div class="box blue">
+  <strong>Qui compare il fingerprint per la prima volta.</strong> Nel post-acquisto la Software House
+  può avere più istanze server (prod, staging, dev). Il fingerprint = <code>hash(INSTALL_KEY + hostname)</code>
+  identifica ogni singola istanza e permette di:
+  <ul>
+    <li>Contare le istanze attive vs <code>max_istanze</code> contrattuale</li>
+    <li>Riconoscere un riavvio dello stesso server (nessun OTP)</li>
+    <li>Rilevare tentativi di copia non autorizzata (Workflow E)</li>
+  </ul>
 </div>
 
 <h3>Prima registrazione di una nuova istanza server</h3>
@@ -396,10 +416,12 @@ Server → GET /register/status?pending_token=...  (ogni 5 sec)
     <th style="text-align:center">Sol. 4<br>Link<br><small>(Trial)</small></th>
   </tr>
   <tr><td>Scenario principale</td><td style="text-align:center">Trial</td><td style="text-align:center">Post-acquisto</td><td style="text-align:center">Post-acquisto</td><td style="text-align:center">Trial</td></tr>
+  <tr><td><strong>Fingerprint richiesto</strong></td><td style="text-align:center">❌ No</td><td style="text-align:center">✅ Sì</td><td style="text-align:center">✅ Sì</td><td style="text-align:center">❌ No</td></tr>
+  <tr><td><strong>Identificativo principale</strong></td><td style="text-align:center">P.IVA</td><td style="text-align:center">P.IVA + INSTALL_KEY + fingerprint</td><td style="text-align:center">P.IVA + INSTALL_KEY + fingerprint</td><td style="text-align:center">P.IVA</td></tr>
   <tr><td>Verifica umana</td><td style="text-align:center">✅ Sempre</td><td style="text-align:center">❌ Mai</td><td style="text-align:center">✅ Prima istanza</td><td style="text-align:center">✅ Sempre</td></tr>
   <tr><td>Deploy automatico</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">✅ Dopo prima volta</td><td style="text-align:center">❌</td></tr>
+  <tr><td>Controllo max_istanze</td><td style="text-align:center">— N/A</td><td style="text-align:center">✅</td><td style="text-align:center">✅</td><td style="text-align:center">— N/A</td></tr>
   <tr><td>Sicurezza</td><td style="text-align:center">Alta</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td><td style="text-align:center">Alta</td></tr>
-  <tr><td>Semplicità per l'admin</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td><td style="text-align:center">Media</td><td style="text-align:center">Alta</td></tr>
   <tr><td>Supporto CI/CD</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">✅</td><td style="text-align:center">❌</td></tr>
   <tr><td>Alert istanze non autorizzate</td><td style="text-align:center">—</td><td style="text-align:center">❌</td><td style="text-align:center">✅</td><td style="text-align:center">—</td></tr>
 </table>

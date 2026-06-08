@@ -29,12 +29,8 @@
     <bpmn:startEvent id="Event_Lib_Start" name="App avviata">
       <bpmn:outgoing>Flow_Lib_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:task id="Activity_Lib_Fingerprint" name="Genera fingerprint del dispositivo">
+    <bpmn:task id="Activity_Lib_Register" name="POST /client/register&#10;(paese, P.IVA, ragione_sociale,&#10;email, product_key)">
       <bpmn:incoming>Flow_Lib_1</bpmn:incoming>
-      <bpmn:outgoing>Flow_Lib_2</bpmn:outgoing>
-    </bpmn:task>
-    <bpmn:task id="Activity_Lib_Register" name="POST /client/register&#10;(paese, P.IVA, product_key, fingerprint)">
-      <bpmn:incoming>Flow_Lib_2</bpmn:incoming>
       <bpmn:outgoing>Flow_Lib_3</bpmn:outgoing>
     </bpmn:task>
     <bpmn:task id="Activity_Lib_Token" name="Ricevi registration_token">
@@ -60,8 +56,7 @@
     <bpmn:endEvent id="Event_Lib_End" name="Trial pronta all'uso">
       <bpmn:incoming>Flow_Lib_8</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_Lib_1" sourceRef="Event_Lib_Start" targetRef="Activity_Lib_Fingerprint"/>
-    <bpmn:sequenceFlow id="Flow_Lib_2" sourceRef="Activity_Lib_Fingerprint" targetRef="Activity_Lib_Register"/>
+    <bpmn:sequenceFlow id="Flow_Lib_1" sourceRef="Event_Lib_Start" targetRef="Activity_Lib_Register"/>
     <bpmn:sequenceFlow id="Flow_Lib_3" sourceRef="Activity_Lib_Register" targetRef="Activity_Lib_Token"/>
     <bpmn:sequenceFlow id="Flow_Lib_4" sourceRef="Activity_Lib_Token" targetRef="Activity_Lib_Issue"/>
     <bpmn:sequenceFlow id="Flow_Lib_5" sourceRef="Activity_Lib_Issue" targetRef="Activity_Lib_Ricevi"/>
@@ -74,7 +69,7 @@
     <bpmn:startEvent id="Event_Port_Start" name="POST /register ricevuta">
       <bpmn:outgoing>Flow_Port_1</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:task id="Activity_Port_Valida" name="Valida: paese, P.IVA, product_key, fingerprint">
+    <bpmn:task id="Activity_Port_Valida" name="Valida: P.IVA, ragione_sociale,&#10;email, product_key&#10;(trial già esistente per P.IVA?)">
       <bpmn:incoming>Flow_Port_1</bpmn:incoming>
       <bpmn:outgoing>Flow_Port_2</bpmn:outgoing>
     </bpmn:task>
@@ -179,11 +174,8 @@
       <bpmndi:BPMNShape id="Event_Lib_Start_di" bpmnElement="Event_Lib_Start">
         <dc:Bounds x="150" y="310" width="36" height="36"/>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_Lib_Fingerprint_di" bpmnElement="Activity_Lib_Fingerprint">
-        <dc:Bounds x="230" y="288" width="100" height="80"/>
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_Lib_Register_di" bpmnElement="Activity_Lib_Register">
-        <dc:Bounds x="380" y="288" width="100" height="80"/>
+        <dc:Bounds x="230" y="288" width="100" height="80"/>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_Lib_Token_di" bpmnElement="Activity_Lib_Token">
         <dc:Bounds x="530" y="288" width="100" height="80"/>
@@ -207,12 +199,8 @@
         <di:waypoint x="186" y="328"/>
         <di:waypoint x="230" y="328"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_Lib_2_di" bpmnElement="Flow_Lib_2">
-        <di:waypoint x="330" y="328"/>
-        <di:waypoint x="380" y="328"/>
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Lib_3_di" bpmnElement="Flow_Lib_3">
-        <di:waypoint x="480" y="328"/>
+        <di:waypoint x="330" y="328"/>
         <di:waypoint x="530" y="328"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_Lib_4_di" bpmnElement="Flow_Lib_4">

@@ -95,8 +95,8 @@ BK_ANALISI/
 4. `POST /client/license/issue` → Portale crea licenza TRIAL, registra istanza server, firma entitlement (JWT RS256)
 5. Libreria salva entitlement in cache e sblocca le funzioni trial
 
-**Trial (Soluzione 1):** nessuna INSTALL_KEY pre-condivisa → verifica via OTP email alla prima registrazione
-**Post-acquisto (Soluzione 3):** INSTALL_KEY consegnata da BK → OTP email solo alla prima nuova istanza, poi automatico
+**Trial (Soluzione 1):** solo P.IVA — nessun fingerprint, nessuna INSTALL_KEY. Una trial per azienda, verificata via OTP email.
+**Post-acquisto (Soluzione 3):** P.IVA + INSTALL_KEY + fingerprint. Il fingerprint serve per contare le istanze server (max_istanze) e rilevare copie non autorizzate. OTP email solo alla prima nuova istanza, poi automatico.
 
 ### Stati licenza
 
@@ -150,7 +150,7 @@ Convenzioni schema:
 | DB | Microsoft SQL Server (T-SQL) |
 | Autenticazione | JWT tra sistemi (no login utente finale) |
 | Firma entitlement | RS256 (RSA asimmetrico) — client verifica offline con chiave pubblica embedded |
-| Fingerprint | `hash(INSTALL_KEY + hostname)` — no hardware fingerprint (instabile su VM/Docker) |
+| Fingerprint | Solo nel **post-acquisto**: `hash(INSTALL_KEY + hostname)` per contare istanze. Nella **trial non serve** — la P.IVA è sufficiente (una trial per azienda) |
 | ALARM | Polling GET verso **ERP interno BK** (non verso la Software House), unica chiamata in uscita del Portale |
 | Offline | Cache entitlement firmato sul server della Software House |
 | Multilingua | Richiesta da subito, IT + EN — approccio DB da definire |
