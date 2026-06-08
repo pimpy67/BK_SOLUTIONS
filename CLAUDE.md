@@ -1,7 +1,9 @@
-# CLAUDE.md — Contesto Progetto BK Invoice Service
+# CLAUDE.md — Contesto Progetto BK Shield
 
 Questo file serve a contestualizzare Claude Code nelle sessioni future.
 Aggiornato: 8 giugno 2026.
+
+> **Nome del servizio: BK Shield** — sistema di licensing B2B sviluppato da BK Solutions.
 
 ---
 
@@ -23,7 +25,7 @@ Il termine "Fornitore" nei documenti originali (riunione, BPMN) è ambiguo. Usar
 
 ## Cos'è questo progetto
 
-**BK Invoice Service** è un sistema di gestione licenze software B2B sviluppato da BK Solutions.
+**BK Shield** è un sistema di gestione licenze software B2B sviluppato da BK Solutions.
 Permette alle **Software House** clienti di BK di proteggere le loro applicazioni tramite
 una libreria client che si registra e valida le licenze presso un server centrale (il Portale).
 
@@ -84,19 +86,66 @@ BK_ANALISI/
 ```
 
 - **Libreria Client**: integrata nel server della Software House. Si registra, ottiene l'entitlement firmato, lo salva in cache, invia heartbeat periodici.
-- **Portale BK-Service**: server centrale di BK Solutions. Espone API REST. Unica chiamata in uscita: il polling ALARM verso l'ERP interno BK.
-- **ERP interno BK**: gestionale di BK Solutions. Quando una Software House paga, l'ERP mette l'evento in coda. Il Portale fa polling (GET /alarm) per raccoglierlo e attivare la licenza.
+- **Portale BK-Service**: server centrale di BK Solutions. Espone API REST. **Non blocca mai le app attivamente** — emette entitlement firmati. L'unica chiamata in uscita è il polling ALARM verso l'ERP interno BK (non verso la Software House).
+- **ERP interno BK**: gestionale di BK Solutions (es. Business Central). Quando una Software House paga, l'ERP mette l'evento in coda. Il Portale fa polling (GET /alarm) per raccoglierlo e aggiornare la licenza.
 
-### Flusso di registrazione (Workflow A)
+### Principio architetturale fondamentale
 
-1. Software House installa server applicativo con INSTALL_KEY nel config (post-acquisto) o senza (trial)
-2. Libreria genera fingerprint = `hash(INSTALL_KEY + hostname)` oppure solo fingerprint per la trial
-3. `POST /client/register` → Portale valida P.IVA e product_key, crea la Software House nel DB e genera `registration_token` (JWT, ~100 sec)
-4. `POST /client/license/issue` → Portale crea licenza TRIAL, registra istanza server, firma entitlement (JWT RS256)
-5. Libreria salva entitlement in cache e sblocca le funzioni trial
+> Il Portale **non blocca** le app: emette un **entitlement firmato** (JWT RS256) che dichiara i diritti (moduli, scadenza, max istanze). La libreria verifica la firma con la **chiave pubblica embedded** e applica le regole localmente. Se la licenza è scaduta o un modulo non è incluso, è **la libreria** a non sbloccare — il Portale non interviene in real-time.
+>
+> L'unica chiamata in uscita del Portale è il polling ALARM verso l'**ERP interno di BK Solutions** per raccogliere eventi come `PAGAMENTO_CONFERMATO` o `SOSPENDI_LICENZA`.
 
-**Trial (Soluzione 1):** solo P.IVA — nessun fingerprint, nessuna INSTALL_KEY. Una trial per azienda, verificata via OTP email.
-**Post-acquisto (Soluzione 3):** P.IVA + INSTALL_KEY + fingerprint. Il fingerprint serve per contare le istanze server (max_istanze) e rilevare copie non autorizzate. OTP email solo alla prima nuova istanza, poi automatico.
+### Fase 1 — Trial (nessun contratto)
+
+```
+Software House (nessun contratto, nessuna INSTALL_KEY)
+   │
+   └─► POST /client/register { P.IVA, product_key, ragione_sociale, email, paese }
+            │
+            ▼
+       Portale: valida P.IVA + product_key
+                verifica nessuna trial attiva per quella P.IVA
+            │
+            ▼
+       Crea licenza TRIAL (30 gg, moduli trial configurati da BK)
+       Firma entitlement JWT RS256
+       Genera license_key univoca
+            │
+            ▼
+       201 → { license_key, entitlement_jwt, expires_at, modules[] }
+            │
+            ▼
+       Libreria salva entitlement in cache locale
+       Verifica firma con chiave pubblica embedded → sblocca moduli trial
+```
+
+- Nessun OTP, nessun fingerprint, nessuna INSTALL_KEY
+- Identificativo univoco: `P.IVA + paese` (supporto clienti esteri)
+- Una sola trial per azienda per prodotto (409 se già usata)
+- Nessun polling ALARM nella fase trial — attivazione immediata diretta
+
+### Fase 2 — Licenza post-acquisto (contratto firmato)
+
+```
+BK Solutions genera INSTALL_KEY → consegnata alla Software House
+Software House inserisce INSTALL_KEY nel config del server
+   │
+   └─► POST /client/register { P.IVA, product_key, install_key, fingerprint }
+            │
+            ├─► Prima istanza (nuova) → OTP email → /register/verify → entitlement ACTIVE
+            └─► Istanze successive (fingerprint già noto) → entitlement ACTIVE immediato
+
+In parallelo:
+   Software House paga BK
+   ERP interno BK mette PAGAMENTO_CONFERMATO in coda
+   Portale fa polling ALARM → riceve evento → aggiorna licenza TRIAL → ACTIVE
+   Al prossimo heartbeat → Libreria riceve entitlement aggiornato e sblocca moduli completi
+```
+
+- Fingerprint = `hash(INSTALL_KEY + hostname)` — identifica ogni istanza server
+- OTP email solo alla prima registrazione di ogni nuova istanza
+- `max_istanze` definito contrattualmente (es. 1 prod + 1 staging)
+- Anti-frode: blocco automatico + alert email se `max_istanze` superato
 
 ### Stati licenza
 
@@ -189,7 +238,7 @@ Le principali:
 
 ---
 
-## Stato avanzamento (8 giugno 2026)
+## Stato avanzamento BK Shield (8 giugno 2026)
 
 - [x] Analisi requisiti (riunione 4 giugno)
 - [x] Schema DB
